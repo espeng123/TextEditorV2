@@ -2,7 +2,7 @@
 public class Test {
 
 	public static void main(String[] args) {
-		System.out.println("SM");
+		System.out.println("We are making minimal progress bois");
 	}
 
 }
