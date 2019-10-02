@@ -16,6 +16,7 @@ public class FrameTest{
 		 frame.setLayout(new BorderLayout());
 		 
 		 JPanel panel = new JPanel();
+		 panel.setFocusTraversalKeysEnabled(false);
 		 frame.getContentPane().add(panel);
 		 panel.addKeyListener(new KeyListener() {
 			 @Override
@@ -26,8 +27,8 @@ public class FrameTest{
 
 			 @Override
 			 public void keyPressed(KeyEvent e) {
-				 typeText(e.getKeyChar());
-				 System.out.println("Pressed " + e.getKeyChar());
+				 System.out.println(e.getKeyCode());
+				 typeText(e);
 			 }
 		 });
 		 panel.setFocusable(true);
@@ -53,12 +54,54 @@ public class FrameTest{
 
 	}
 	
-	public static void typeText(char keyTyped)
+	public static void typeText(KeyEvent e)
 	{
+		int keyCode = e.getKeyCode();
+		char keyTyped = e.getKeyChar();
+		if (keyTyped == 8) {
+			String previousText = label.getText();
+			previousText = previousText.substring(0, previousText.length() - 7);
+			if (previousText.contains("&nbsp;") && (previousText.substring(previousText.length()-6).equals("&nbsp;"))) {
+			//System.out.println(previousText.substring(previousText.length()-6));
+			label.setText(previousText.substring(0, previousText.length() - 6) + "</html>");
+			} 
+			else if (previousText.substring(previousText.length()-6).equals("<html>")) {
+
+			}
+			else {
+			label.setText(previousText.substring(0, previousText.length() - 1) + "</html>");
+			}
+
+			frame.repaint();
+		} 
+		else if (keyTyped == 32) {
+			String previousText = label.getText();
+			previousText = previousText.substring(0, previousText.length() - 7);
+			label.setText(previousText + "&nbsp;" + "</html>");
+			frame.repaint();
+		}
+		else if (keyCode == 9)
+		{
+			String previousText = label.getText();
+			previousText = previousText.substring(0,previousText.length()-7);
+			previousText += "\t";
+			label.setText(previousText+"</html>");
+			frame.repaint();
+		}
+		else if (keyTyped == 10)
+		{
 		String previousText = label.getText();
 		previousText = previousText.substring(0,previousText.length()-7);
-		label.setText(previousText+keyTyped+"</html>");
+		label.setText(previousText + "<br>"+"</html>");
 		frame.repaint();
+		}
+		else if( keyCode != 16 && keyCode != 20 && keyCode != 157 && keyCode != 0 && keyCode != 17 && keyCode != 18 )
+		{
+			String previousText = label.getText();
+			previousText = previousText.substring(0,previousText.length()-7);
+			label.setText(previousText+keyTyped+"</html>");
+			frame.repaint();	
+		}
 	}
 	
 	
