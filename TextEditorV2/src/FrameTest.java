@@ -80,6 +80,8 @@ public class FrameTest {
 				label.setText(previousText.substring(0, previousText.length() - 4) + "</html>");
 			} else if (previousText.substring(previousText.length() - 4).equals("&gt;")) {
 				label.setText(previousText.substring(0, previousText.length() - 4) + "</html>");
+			} else if (previousText.substring(previousText.length() - 5).equals("&amp;")) {
+				label.setText(previousText.substring(0, previousText.length() - 5) + "</html>");
 			} else {
 				label.setText(previousText.substring(0, previousText.length() - 1) + "</html>");
 			}
@@ -108,6 +110,12 @@ public class FrameTest {
 			previousText += "&gt;";
 			label.setText(previousText + "</html>");
 			frame.repaint();
+		} else if (keyCode == 55 && shift) {
+			String previousText = label.getText();
+			previousText = previousText.substring(0, previousText.length() - 7);
+			previousText += "&amp;";
+			label.setText(previousText + "</html>");
+			frame.repaint();
 		} else if (keyTyped == 10) {
 			String previousText = label.getText();
 			previousText = previousText.substring(0, previousText.length() - 7);
@@ -116,7 +124,7 @@ public class FrameTest {
 		} else if (keyCode == 157) {
 			cursor();
 		} else if (keyCode != 16 && keyCode != 20 && keyCode != 157 && keyCode != 0 && keyCode != 17 && keyCode != 18) {
-			if (keyCode == 44 || keyCode == 46) {
+			if (keyCode == 44 || keyCode == 46 || keyCode == 55) {
 				if (!shift) {
 					String previousText = label.getText();
 					previousText = previousText.substring(0, previousText.length() - 7);
