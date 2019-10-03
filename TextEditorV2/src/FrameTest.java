@@ -121,9 +121,8 @@ public class FrameTest {
 			previousText = previousText.substring(0, previousText.length() - 7);
 			label.setText(previousText + "<br>" + "</html>");
 			frame.repaint();
-		} else if (keyCode == 157) {
-			cursor();
-		} else if (keyCode != 16 && keyCode != 20 && keyCode != 157 && keyCode != 0 && keyCode != 17 && keyCode != 18) {
+		} else if (keyCode != 16 && keyCode != 20 && keyCode != 157 && keyCode != 0 && keyCode != 17 && keyCode != 18
+				&& keyCode != 37 && keyCode != 38 && keyCode != 39 && keyCode != 40) {
 			if (keyCode == 44 || keyCode == 46 || keyCode == 55) {
 				if (!shift) {
 					String previousText = label.getText();
@@ -138,30 +137,6 @@ public class FrameTest {
 				frame.repaint();
 			}
 		}
-	}
-
-	public static void cursor() {
-		String currentText = label.getText();
-		int i = currentText.lastIndexOf("<br>");
-		int length = 0;
-		if (i != -1) {
-			currentText = currentText.substring(i + 4, currentText.length());
-			currentText = currentText.substring(0, currentText.length() - 7);
-			length = currentText.length();
-		} else {
-			currentText = currentText.substring(0, currentText.length() - 7);
-			length = currentText.length();
-		}
-		double pixelWidth = 4.5;
-		double x = (length * pixelWidth) + (13 * pixelWidth);
-
-		JLabel labelCursor = new JLabel("|");
-		labelCursor.setForeground(Color.white);
-		labelCursor.setFont(new Font("Courier", Font.PLAIN, 14));
-		labelCursor.setBounds((int) x, 14, 50, 50);
-		frame.add(labelCursor);
-		frame.repaint();
-
 	}
 
 }
