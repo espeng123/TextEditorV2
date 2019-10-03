@@ -40,7 +40,7 @@ public class FrameTest{
 		 JLabel label4 = new JLabel("             ");
 		 label.setVerticalAlignment(JLabel.TOP);
 		 Dimension size = label.getPreferredSize();
-		 System.out.println(size);
+		 //System.out.println(size);
 		 label.setBounds(21,21,758,758);
 		 label.setForeground(Color.white);
 		 label.setFont(new Font("Courier", Font.PLAIN, 14));
@@ -84,7 +84,7 @@ public class FrameTest{
 		{
 			String previousText = label.getText();
 			previousText = previousText.substring(0,previousText.length()-7);
-			previousText += "\t";
+			previousText += "&emsp;&emsp;&emsp;&emsp;";
 			label.setText(previousText+"</html>");
 			frame.repaint();
 		}
@@ -95,6 +95,10 @@ public class FrameTest{
 		label.setText(previousText + "<br>"+"</html>");
 		frame.repaint();
 		}
+		else if(keyCode == 157)
+		{
+			cursor();
+		}
 		else if( keyCode != 16 && keyCode != 20 && keyCode != 157 && keyCode != 0 && keyCode != 17 && keyCode != 18 )
 		{
 			String previousText = label.getText();
@@ -104,6 +108,32 @@ public class FrameTest{
 		}
 	}
 	
-	
+	public static void cursor()
+	{
+		String currentText = label.getText();
+		int i = currentText.lastIndexOf("<br>");
+		int length = 0;
+		if( i != -1 )
+		{
+			currentText = currentText.substring(i+4,currentText.length());
+			currentText = currentText.substring(0,currentText.length()-7);
+			length = currentText.length();
+		}
+		else
+		{
+			currentText = currentText.substring(0,currentText.length()-7);
+			length = currentText.length();
+		}
+		double pixelWidth = 4.5;
+		double x = (length*pixelWidth)+(13*pixelWidth);
+
+		JLabel labelCursor = new JLabel("|");
+		labelCursor.setForeground(Color.white);
+		labelCursor.setFont(new Font("Courier", Font.PLAIN, 14));
+		labelCursor.setBounds((int)x,14,50,50);
+		frame.add(labelCursor);
+		frame.repaint();
+		
+	}
 	
 }
