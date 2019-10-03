@@ -68,6 +68,9 @@ public class FrameTest{
 			else if (previousText.substring(previousText.length()-6).equals("<html>")) {
 
 			}
+			else if (previousText.substring(previousText.length()-6).equals("&emsp;")) {
+				label.setText(previousText.substring(0, previousText.length() - 24) + "</html>");
+			}
 			else {
 			label.setText(previousText.substring(0, previousText.length() - 1) + "</html>");
 			}
