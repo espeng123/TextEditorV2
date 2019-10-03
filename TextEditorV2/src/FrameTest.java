@@ -122,7 +122,7 @@ public class FrameTest {
 			label.setText(previousText + "<br>" + "</html>");
 			frame.repaint();
 		} else if (keyCode != 16 && keyCode != 20 && keyCode != 157 && keyCode != 0 && keyCode != 17 && keyCode != 18
-				&& keyCode != 37 && keyCode != 38 && keyCode != 39 && keyCode != 40 && keyCode != 65406) {
+				&& keyCode != 37 && keyCode != 38 && keyCode != 39 && keyCode != 40 && keyCode != 65406 && keyCode != 27) {
 			if (keyCode == 44 || keyCode == 46 || keyCode == 55) {
 				if (!shift) {
 					String previousText = label.getText();
