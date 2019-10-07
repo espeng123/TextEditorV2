@@ -1,13 +1,25 @@
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.filechooser.FileSystemView;
+
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 public class FrameTest {
 
 	static JFrame frame = new JFrame("GUI");
 	static JLabel label = new JLabel("<html></html>", JLabel.LEFT);
 	static boolean shift = false;
+	static boolean command = false;
 
 	public static void main(String[] args) {
 
@@ -29,6 +41,9 @@ public class FrameTest {
 				if (e.getKeyCode() == 16) {
 					shift = false;
 				}
+				if (e.getKeyCode() == 157) {
+					command = false;
+				}
 			}
 
 			@Override
@@ -36,6 +51,9 @@ public class FrameTest {
 				System.out.println(e.getKeyCode());
 				if (e.getKeyCode() == 16) {
 					shift = true;
+				}
+				if (e.getKeyCode() == 157) {
+					command = true;
 				}
 				typeText(e);
 			}
@@ -121,8 +139,13 @@ public class FrameTest {
 			previousText = previousText.substring(0, previousText.length() - 7);
 			label.setText(previousText + "<br>" + "</html>");
 			frame.repaint();
+		} else if (keyCode == 83 && command) {
+			save();
+		} else if (keyCode == 79 && command) {
+			open();
 		} else if (keyCode != 16 && keyCode != 20 && keyCode != 157 && keyCode != 0 && keyCode != 17 && keyCode != 18
-				&& keyCode != 37 && keyCode != 38 && keyCode != 39 && keyCode != 40 && keyCode != 65406 && keyCode != 27) {
+				&& keyCode != 37 && keyCode != 38 && keyCode != 39 && keyCode != 40 && keyCode != 65406
+				&& keyCode != 27) {
 			if (keyCode == 44 || keyCode == 46 || keyCode == 55) {
 				if (!shift) {
 					String previousText = label.getText();
@@ -138,10 +161,97 @@ public class FrameTest {
 			}
 		}
 	}
-	
-	public static void save()
-	{
+
+	public static void save() {
+
+		String filename = "myText.txt";
+
+		JFileChooser j = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		int r = j.showSaveDialog(null);
+		if (r == JFileChooser.APPROVE_OPTION)
+
+		{
+			// set the label to the path of the selected file
+			filename = j.getSelectedFile().getAbsolutePath();
+		}
+		if (!filename.contains(".txt")) {
+			filename += ".txt";
+		}
+
+		String toSave = label.getText();
+		toSave = toSave.substring(6, toSave.length() - 7);
+		if (toSave.contains("&nbsp;")) {
+			toSave = toSave.replaceAll("&nbsp;", " ");
+		}
+		if (toSave.contains("&emsp;&emsp;&emsp;&emsp;")) {
+			toSave = toSave.replaceAll("&emsp;&emsp;&emsp;&emsp;", "\t");
+		}
+		if (toSave.contains("&lt;")) {
+			toSave = toSave.replaceAll("&lt;", "<");
+		}
+		if (toSave.contains("&gt;")) {
+			toSave = toSave.replaceAll("&gt;", ">");
+		}
+		if (toSave.contains("&amp;")) {
+			toSave = toSave.replaceAll("&amp;", "&");
+		}
+		if (toSave.contains("<br>")) {
+			toSave = toSave.replaceAll("<br>", "\n");
+		}
+		System.out.println(toSave);
+
+		BufferedWriter bw = null;
+		try {
+			File file = new File(filename);
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+			FileWriter fw = new FileWriter(file);
+			bw = new BufferedWriter(fw);
+			bw.write(toSave);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				if (bw != null)
+					bw.close();
+			} catch (Exception ex) {
+				System.out.println("Error in closing the BufferedWriter" + ex);
+			}
+		}
+	}
+
+	public static void open() {
+		String filename = null;
+		String currentLine;
+		String text = "<html>";
+
+		JFileChooser j = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("TEXT FILES", "txt", "text");
+		j.setFileFilter(filter);
+		int r = j.showOpenDialog(null);
+		if (r == JFileChooser.APPROVE_OPTION) {
+			filename = j.getSelectedFile().getAbsolutePath();
+		}
+
+		try {
+			FileReader fr = new FileReader(filename);
+			BufferedReader br = new BufferedReader(fr);
+			while ((currentLine = br.readLine()) != null) {
+
+				text += currentLine + "<br>";
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		text+="</html>";
 		
+		if(text.contains("</html>"))
+		{
+			label.setText(text);
+		}
 	}
 
 }
