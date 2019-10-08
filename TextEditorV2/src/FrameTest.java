@@ -1,18 +1,10 @@
 
-//Import a whole bunch of random shit
+//Import a whole bunch of random stuff
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.filechooser.FileSystemView;
-
+import javax.swing.filechooser.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.awt.event.*;
+import java.io.*;
 
 public class FrameTest {
 
@@ -28,7 +20,22 @@ public class FrameTest {
 	public static void main(String[] args) {
 
 		// Setup the frame with size, background color, and close button
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame.addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+            	int result = JOptionPane.showConfirmDialog(null, "Your work is not saved. Do you wish to continue?","Confirm",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);
+
+            	if(result == JOptionPane.YES_OPTION){
+            		System.exit(0);
+            	}else{
+            		save();
+            		System.exit(0);
+            	}
+            }
+        });
 		frame.setSize(800, 800);
 		frame.getContentPane().setBackground(Color.black);
 		frame.setLayout(new BorderLayout());
@@ -74,8 +81,8 @@ public class FrameTest {
 		// Intelligent way to do borders
 		JLabel label1 = new JLabel("<html> <br> <br></html>");
 		JLabel label2 = new JLabel(" ");
-		JLabel label3 = new JLabel("             ");
-		JLabel label4 = new JLabel("             ");
+		JLabel label3 = new JLabel("             ");
+		JLabel label4 = new JLabel("             ");
 
 		// Set up the location, size, allignment, font, and font color of the text box
 		label.setVerticalAlignment(JLabel.TOP);
@@ -94,6 +101,7 @@ public class FrameTest {
 	}
 
 	public static void typeText(KeyEvent e) {
+
 		int keyCode = e.getKeyCode();
 		char keyTyped = e.getKeyChar();
 		// Implements backspace
@@ -102,77 +110,104 @@ public class FrameTest {
 			previousText = previousText.substring(0, previousText.length() - 7);
 			// Implements space
 			if (previousText.contains("&nbsp;")
-					&& (previousText.substring(previousText.length() - 6).equals("&nbsp;"))) {
+					&& (previousText.substring(previousText.length() - 7).equals("&nbsp;|"))) {
 				// System.out.println(previousText.substring(previousText.length()-6));
-				label.setText(previousText.substring(0, previousText.length() - 6) + "</html>");
+				label.setText(previousText.substring(0, previousText.length() - 7) + "|" + "</html>");
 			}
 
-			else if (previousText.substring(previousText.length() - 6).equals("<html>")) {
+			else if (previousText.substring(previousText.length() - 7).equals("<html>|")) {
 
 			}
 			// Adding non-breaking spaces
-			else if (previousText.substring(previousText.length() - 6).equals("&emsp;")) {
-				label.setText(previousText.substring(0, previousText.length() - 24) + "</html>");
+			else if (previousText.substring(previousText.length() - 7).equals("&emsp;|")) {
+				label.setText(previousText.substring(0, previousText.length() - 25) + "|" + "</html>");
 			}
 
+			else if (previousText.substring(previousText.length() - 5).equals("<br>|")) {
+				label.setText(previousText.substring(0, previousText.length() - 5) + "|" + "</html>");
+			}
 			// Implementing less than sign
-			else if (previousText.substring(previousText.length() - 4).equals("&lt;")) {
-				label.setText(previousText.substring(0, previousText.length() - 4) + "</html>");
+			else if (previousText.substring(previousText.length() - 5).equals("&lt;|")) {
+				label.setText(previousText.substring(0, previousText.length() - 5) + "|" + "</html>");
 			}
-
 			// Implementing greater than sign
-			else if (previousText.substring(previousText.length() - 4).equals("&gt;")) {
-				label.setText(previousText.substring(0, previousText.length() - 4) + "</html>");
+			else if (previousText.substring(previousText.length() - 5).equals("&gt;|")) {
+				label.setText(previousText.substring(0, previousText.length() - 5) + "|" + "</html>");
 			}
 
-			else if (previousText.substring(previousText.length() - 5).equals("&amp;")) {
-				label.setText(previousText.substring(0, previousText.length() - 5) + "</html>");
+			else if (previousText.substring(previousText.length() - 6).equals("&amp;|")) {
+				label.setText(previousText.substring(0, previousText.length() - 6) + "|" + "</html>");
 			}
 
 			else {
-				label.setText(previousText.substring(0, previousText.length() - 1) + "</html>");
+				label.setText(previousText.substring(0, previousText.length() - 2) + "|" + "</html>");
 			}
 
 			frame.repaint();
 			// If the space key has been pressed
 		} else if (keyTyped == 32) {
 			String previousText = label.getText();
-			previousText = previousText.substring(0, previousText.length() - 7);
-			label.setText(previousText + "&nbsp;" + "</html>");
+			if (previousText.equals("<html></html>")) {
+				previousText = previousText.substring(0, previousText.length() - 7);
+			} else {
+				previousText = previousText.substring(0, previousText.length() - 8);
+			}
+			label.setText(previousText + "&nbsp;" + "|" + "</html>");
 			frame.repaint();
 			// If TAB was entered
 		} else if (keyCode == 9) {
 			String previousText = label.getText();
-			previousText = previousText.substring(0, previousText.length() - 7);
+			if (previousText.equals("<html></html>")) {
+				previousText = previousText.substring(0, previousText.length() - 7);
+			} else {
+				previousText = previousText.substring(0, previousText.length() - 8);
+			}
 			previousText += "&emsp;&emsp;&emsp;&emsp;";
-			label.setText(previousText + "</html>");
+			label.setText(previousText + "|" + "</html>");
 			frame.repaint();
 			// IF they tried to type “<”
 		} else if (keyCode == 44 && shift) {
 			String previousText = label.getText();
-			previousText = previousText.substring(0, previousText.length() - 7);
+			if (previousText.equals("<html></html>")) {
+				previousText = previousText.substring(0, previousText.length() - 7);
+			} else {
+				previousText = previousText.substring(0, previousText.length() - 8);
+			}
 			previousText += "&lt;";
-			label.setText(previousText + "</html>");
+			label.setText(previousText + "|" + "</html>");
 			frame.repaint();
 			// IF they tried to type “>”
 		} else if (keyCode == 46 && shift) {
 			String previousText = label.getText();
-			previousText = previousText.substring(0, previousText.length() - 7);
+			if (previousText.equals("<html></html>")) {
+				previousText = previousText.substring(0, previousText.length() - 7);
+			} else {
+				previousText = previousText.substring(0, previousText.length() - 8);
+			}
 			previousText += "&gt;";
-			label.setText(previousText + "</html>");
+			label.setText(previousText + "|" + "</html>");
 			frame.repaint();
 			// IF they tried to type “&”
 		} else if (keyCode == 55 && shift) {
 			String previousText = label.getText();
-			previousText = previousText.substring(0, previousText.length() - 7);
+			if (previousText.equals("<html></html>")) {
+				previousText = previousText.substring(0, previousText.length() - 7);
+			} else {
+				previousText = previousText.substring(0, previousText.length() - 8);
+			}
 			previousText += "&amp;";
-			label.setText(previousText + "</html>");
+			label.setText(previousText + "|" + "</html>");
 			frame.repaint();
 			// IF they pressed enter or return
 		} else if (keyTyped == 10) {
 			String previousText = label.getText();
-			previousText = previousText.substring(0, previousText.length() - 7);
-			label.setText(previousText + "<br>" + "</html>");
+			if (previousText.equals("<html></html>")) {
+				previousText = previousText.substring(0, previousText.length() - 7);
+			} else {
+				previousText = previousText.substring(0, previousText.length() - 8);
+			}
+			// System.out.println(previousText);
+			label.setText(previousText + "<br>" + "|" + "</html>");
 			frame.repaint();
 			// Implements saving through command + s
 		} else if (keyCode == 83 && command) {
@@ -198,8 +233,12 @@ public class FrameTest {
 				}
 			} else {
 				String previousText = label.getText();
-				previousText = previousText.substring(0, previousText.length() - 7);
-				label.setText(previousText + keyTyped + "</html>");
+				if (previousText.equals("<html></html>")) {
+					previousText = previousText.substring(0, previousText.length() - 7);
+				} else {
+					previousText = previousText.substring(0, previousText.length() - 8);
+				}
+				label.setText(previousText + keyTyped + "|" + "</html>");
 				frame.repaint();
 			}
 		}
@@ -228,7 +267,7 @@ public class FrameTest {
 			// Prepare the string to be saved
 			String toSave = label.getText();
 			// Remove the html tags
-			toSave = toSave.substring(6, toSave.length() - 7);
+			toSave = toSave.substring(6, toSave.length() - 8);
 			// Replace “&nbsp;” with a “ “
 			if (toSave.contains("&nbsp;")) {
 				toSave = toSave.replaceAll("&nbsp;", " ");
