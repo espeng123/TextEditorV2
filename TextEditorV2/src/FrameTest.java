@@ -398,6 +398,6 @@ public class FrameTest {
 		} else {
 			command = false;
 		}
-
+		
 	}
 }
