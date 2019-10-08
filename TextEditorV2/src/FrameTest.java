@@ -22,7 +22,7 @@ public class FrameTest {
 	static JLabel label = new JLabel("<html></html>", JLabel.LEFT);
 	// Boolean for if shift is pressed
 	static boolean shift = false;
-	//Boolean for if command is pressed
+	// Boolean for if command is pressed
 	static boolean command = false;
 
 	public static void main(String[] args) {
@@ -44,11 +44,11 @@ public class FrameTest {
 
 			@Override
 			public void keyReleased(KeyEvent e) {
-				//If the shift key has been released, set shift to false
+				// If the shift key has been released, set shift to false
 				if (e.getKeyCode() == 16) {
 					shift = false;
 				}
-				//If the command key has been released, set command to false
+				// If the command key has been released, set command to false
 				if (e.getKeyCode() == 157) {
 					command = false;
 				}
@@ -61,7 +61,7 @@ public class FrameTest {
 				if (e.getKeyCode() == 16) {
 					shift = true;
 				}
-				//If the command key has been pressed, set command to true
+				// If the command key has been pressed, set command to true
 				if (e.getKeyCode() == 157) {
 					command = true;
 				}
@@ -100,7 +100,7 @@ public class FrameTest {
 		if (keyTyped == 8) {
 			String previousText = label.getText();
 			previousText = previousText.substring(0, previousText.length() - 7);
-			//Implements space			
+			// Implements space
 			if (previousText.contains("&nbsp;")
 					&& (previousText.substring(previousText.length() - 6).equals("&nbsp;"))) {
 				// System.out.println(previousText.substring(previousText.length()-6));
@@ -110,17 +110,17 @@ public class FrameTest {
 			else if (previousText.substring(previousText.length() - 6).equals("<html>")) {
 
 			}
-			//Adding non-breaking spaces
+			// Adding non-breaking spaces
 			else if (previousText.substring(previousText.length() - 6).equals("&emsp;")) {
 				label.setText(previousText.substring(0, previousText.length() - 24) + "</html>");
 			}
 
-			//Implementing less than sign
+			// Implementing less than sign
 			else if (previousText.substring(previousText.length() - 4).equals("&lt;")) {
 				label.setText(previousText.substring(0, previousText.length() - 4) + "</html>");
 			}
 
-			//Implementing greater than sign
+			// Implementing greater than sign
 			else if (previousText.substring(previousText.length() - 4).equals("&gt;")) {
 				label.setText(previousText.substring(0, previousText.length() - 4) + "</html>");
 			}
@@ -184,7 +184,8 @@ public class FrameTest {
 			command = false;
 		}
 
-		//No ? box when hitting shift, caps lock, command, fn, control, alt, all the arrow keys, and right option keys 
+		// No ? box when hitting shift, caps lock, command, fn, control, alt, all the
+		// arrow keys, and right option keys
 		else if (keyCode != 16 && keyCode != 20 && keyCode != 157 && keyCode != 0 && keyCode != 17 && keyCode != 18
 				&& keyCode != 37 && keyCode != 38 && keyCode != 39 && keyCode != 40 && keyCode != 65406
 				&& keyCode != 27) {
@@ -231,7 +232,7 @@ public class FrameTest {
 		if (toSave.contains("&nbsp;")) {
 			toSave = toSave.replaceAll("&nbsp;", " ");
 		}
-		//Replace “&emsp;&emsp;&emsp;&emsp;” with a tab
+		// Replace “&emsp;&emsp;&emsp;&emsp;” with a tab
 		if (toSave.contains("&emsp;&emsp;&emsp;&emsp;")) {
 			toSave = toSave.replaceAll("&emsp;&emsp;&emsp;&emsp;", "\t");
 		}
@@ -243,11 +244,11 @@ public class FrameTest {
 		if (toSave.contains("&gt;")) {
 			toSave = toSave.replaceAll("&gt;", ">");
 		}
-		//Replace “&amp;” with a “&”
+		// Replace “&amp;” with a “&”
 		if (toSave.contains("&amp;")) {
 			toSave = toSave.replaceAll("&amp;", "&");
 		}
-		//Replace “<br>” with a enter
+		// Replace “<br>” with a enter
 		if (toSave.contains("<br>")) {
 			toSave = toSave.replaceAll("<br>", "\n");
 		}
@@ -284,9 +285,9 @@ public class FrameTest {
 		// Initiate filename, currentLine, and text variables
 		String filename = null;
 		String currentLine;
-		String text = "<html>";
+		String text = "";
 
-		//Create an open dialog box
+		// Create an open dialog box
 		JFileChooser j = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("TEXT FILES", "txt", "text");
 		j.setFileFilter(filter);
@@ -301,9 +302,10 @@ public class FrameTest {
 			// Open the file and add line by line to the text
 			FileReader fr = new FileReader(filename);
 			br = new BufferedReader(fr);
-			while ((currentLine = br.readLine()) != null) {
-
+			currentLine = br.readLine();
+			while (currentLine != null) {
 				text += currentLine + "<br>";
+				currentLine = br.readLine();
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -318,8 +320,39 @@ public class FrameTest {
 				System.out.println("Error in closing the BufferedWriter" + ex);
 			}
 		}
+
+		// Replace “&” with a “&amp;”
+		if (text.contains("&")) {
+			text = text.replaceAll("&", "&amp;");
+		}
+		// Replace " " with a “&nbsp;”
+		if (text.contains(" ")) {
+			text = text.replaceAll(" ", "&nbsp;");
+		}
+		// Replace tab with “&emsp;&emsp;&emsp;&emsp;”
+		if (text.contains("\t")) {
+			text = text.replaceAll("\t", "&emsp;&emsp;&emsp;&emsp;");
+		}
+		// Replace "<" with a "&lt;"
+		if (text.contains("<")) {
+			text = text.replaceAll("<", "&lt;");
+		}
+		// Replace “>” with a “&gt;”
+		if (text.contains(">")) {
+			text = text.replaceAll(">", "&gt;");
+		}
+		//Replace ascii html with real html 
+		if (text.contains("&lt;br&gt;")) {
+			text = text.replaceAll("&lt;br&gt;", "<br>");
+		}
+
 		// Adds the ending /html thingee so it work properlee
+		text = "<html>" + text;
 		text += "</html>";
+
+		System.out.println(text);
+
+		label.setText(text);
 	}
 
 }
