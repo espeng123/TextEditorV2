@@ -213,70 +213,74 @@ public class FrameTest {
 
 		// File location chooser
 		JFileChooser j = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		// j.setDefaultCloseOperation(JFileChooser.EXIT_ON_CLOSE);
 		int r = j.showSaveDialog(null);
 		// If the user chooses to save:
 		if (r == JFileChooser.APPROVE_OPTION) {
 			// Set the filename to the path of the selected file
 			filename = j.getSelectedFile().getAbsolutePath();
-		}
-		// If the user forgets .txt add it automatically
-		if (!filename.contains(".txt")) {
-			filename += ".txt";
-		}
 
-		// Prepare the string to be saved
-		String toSave = label.getText();
-		// Remove the html tags
-		toSave = toSave.substring(6, toSave.length() - 7);
-		// Replace “&nbsp;” with a “ “
-		if (toSave.contains("&nbsp;")) {
-			toSave = toSave.replaceAll("&nbsp;", " ");
-		}
-		// Replace “&emsp;&emsp;&emsp;&emsp;” with a tab
-		if (toSave.contains("&emsp;&emsp;&emsp;&emsp;")) {
-			toSave = toSave.replaceAll("&emsp;&emsp;&emsp;&emsp;", "\t");
-		}
-		// Replace “&lt;” with a “<”
-		if (toSave.contains("&lt;")) {
-			toSave = toSave.replaceAll("&lt;", "<");
-		}
-		// Replace “&gt;” with a “>”
-		if (toSave.contains("&gt;")) {
-			toSave = toSave.replaceAll("&gt;", ">");
-		}
-		// Replace “&amp;” with a “&”
-		if (toSave.contains("&amp;")) {
-			toSave = toSave.replaceAll("&amp;", "&");
-		}
-		// Replace “<br>” with a enter
-		if (toSave.contains("<br>")) {
-			toSave = toSave.replaceAll("<br>", "\n");
-		}
-
-		// Create a buffered writer to save the file
-		BufferedWriter bw = null;
-		try {
-			// Create a file at the designated filename
-			File file = new File(filename);
-			if (!file.exists()) {
-				file.createNewFile();
+			// If the user forgets .txt add it automatically
+			if (!filename.contains(".txt")) {
+				filename += ".txt";
 			}
-			FileWriter fw = new FileWriter(file);
-			bw = new BufferedWriter(fw);
-			// Write the string to the file
-			bw.write(toSave);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
+
+			// Prepare the string to be saved
+			String toSave = label.getText();
+			// Remove the html tags
+			toSave = toSave.substring(6, toSave.length() - 7);
+			// Replace “&nbsp;” with a “ “
+			if (toSave.contains("&nbsp;")) {
+				toSave = toSave.replaceAll("&nbsp;", " ");
+			}
+			// Replace “&emsp;&emsp;&emsp;&emsp;” with a tab
+			if (toSave.contains("&emsp;&emsp;&emsp;&emsp;")) {
+				toSave = toSave.replaceAll("&emsp;&emsp;&emsp;&emsp;", "\t");
+			}
+			// Replace “&lt;” with a “<”
+			if (toSave.contains("&lt;")) {
+				toSave = toSave.replaceAll("&lt;", "<");
+			}
+			// Replace “&gt;” with a “>”
+			if (toSave.contains("&gt;")) {
+				toSave = toSave.replaceAll("&gt;", ">");
+			}
+			// Replace “&amp;” with a “&”
+			if (toSave.contains("&amp;")) {
+				toSave = toSave.replaceAll("&amp;", "&");
+			}
+			// Replace “<br>” with a enter
+			if (toSave.contains("<br>")) {
+				toSave = toSave.replaceAll("<br>", "\n");
+			}
+
+			// Create a buffered writer to save the file
+			BufferedWriter bw = null;
 			try {
-				// Close the writer
-				if (bw != null) {
-					bw.close();
+				// Create a file at the designated filename
+				File file = new File(filename);
+				if (!file.exists()) {
+					file.createNewFile();
 				}
-			} catch (Exception ex) {
-				System.out.println("Error in closing the BufferedWriter" + ex);
+				FileWriter fw = new FileWriter(file);
+				bw = new BufferedWriter(fw);
+				// Write the string to the file
+				bw.write(toSave);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+				try {
+					// Close the writer
+					if (bw != null) {
+						bw.close();
+					}
+				} catch (Exception ex) {
+					System.out.println("Error in closing the BufferedWriter" + ex);
+				}
 			}
+		} else {
+			command = false;
 		}
 	}
 
@@ -295,64 +299,66 @@ public class FrameTest {
 		// Get the filepath to the file the user wants open
 		if (r == JFileChooser.APPROVE_OPTION) {
 			filename = j.getSelectedFile().getAbsolutePath();
-		}
 
-		BufferedReader br = null;
-		try {
-			// Open the file and add line by line to the text
-			FileReader fr = new FileReader(filename);
-			br = new BufferedReader(fr);
-			currentLine = br.readLine();
-			while (currentLine != null) {
-				text += currentLine + "<br>";
-				currentLine = br.readLine();
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
+			BufferedReader br = null;
 			try {
-				// Close the writer
-				if (br != null) {
-					br.close();
+				// Open the file and add line by line to the text
+				FileReader fr = new FileReader(filename);
+				br = new BufferedReader(fr);
+				currentLine = br.readLine();
+				while (currentLine != null) {
+					text += currentLine + "<br>";
+					currentLine = br.readLine();
 				}
-			} catch (Exception ex) {
-				System.out.println("Error in closing the BufferedWriter" + ex);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+				try {
+					// Close the writer
+					if (br != null) {
+						br.close();
+					}
+				} catch (Exception ex) {
+					System.out.println("Error in closing the BufferedWriter" + ex);
+				}
 			}
+
+			// Replace “&” with a “&amp;”
+			if (text.contains("&")) {
+				text = text.replaceAll("&", "&amp;");
+			}
+			// Replace " " with a “&nbsp;”
+			if (text.contains(" ")) {
+				text = text.replaceAll(" ", "&nbsp;");
+			}
+			// Replace tab with “&emsp;&emsp;&emsp;&emsp;”
+			if (text.contains("\t")) {
+				text = text.replaceAll("\t", "&emsp;&emsp;&emsp;&emsp;");
+			}
+			// Replace "<" with a "&lt;"
+			if (text.contains("<")) {
+				text = text.replaceAll("<", "&lt;");
+			}
+			// Replace “>” with a “&gt;”
+			if (text.contains(">")) {
+				text = text.replaceAll(">", "&gt;");
+			}
+			// Replace ascii html with real html
+			if (text.contains("&lt;br&gt;")) {
+				text = text.replaceAll("&lt;br&gt;", "<br>");
+			}
+
+			// Adds the ending /html thingee so it work properlee
+			text = "<html>" + text;
+			text += "</html>";
+
+			System.out.println(text);
+
+			label.setText(text);
+		} else {
+			command = false;
 		}
 
-		// Replace “&” with a “&amp;”
-		if (text.contains("&")) {
-			text = text.replaceAll("&", "&amp;");
-		}
-		// Replace " " with a “&nbsp;”
-		if (text.contains(" ")) {
-			text = text.replaceAll(" ", "&nbsp;");
-		}
-		// Replace tab with “&emsp;&emsp;&emsp;&emsp;”
-		if (text.contains("\t")) {
-			text = text.replaceAll("\t", "&emsp;&emsp;&emsp;&emsp;");
-		}
-		// Replace "<" with a "&lt;"
-		if (text.contains("<")) {
-			text = text.replaceAll("<", "&lt;");
-		}
-		// Replace “>” with a “&gt;”
-		if (text.contains(">")) {
-			text = text.replaceAll(">", "&gt;");
-		}
-		//Replace ascii html with real html 
-		if (text.contains("&lt;br&gt;")) {
-			text = text.replaceAll("&lt;br&gt;", "<br>");
-		}
-
-		// Adds the ending /html thingee so it work properlee
-		text = "<html>" + text;
-		text += "</html>";
-
-		System.out.println(text);
-
-		label.setText(text);
 	}
-
 }
