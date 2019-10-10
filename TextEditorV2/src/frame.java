@@ -1,3 +1,4 @@
+
 //Import a whole bunch of random stuff
 import javax.swing.*;
 import javax.swing.filechooser.*;
@@ -16,11 +17,10 @@ public class frame {
 	// Boolean for if command is pressed
 	boolean command = false;
 
-	// Costructor
+	// Constructor
 	public frame(int xSize, int ySize, String text) {
-		
-		if(text != null)
-		{
+
+		if (text != null) {
 			String previousText = label.getText();
 			if (previousText.equals("<html></html>")) {
 				previousText = previousText.substring(0, previousText.length() - 7);
@@ -30,7 +30,7 @@ public class frame {
 			label.setText(previousText + text + "|" + "</html>");
 			frame.repaint();
 		}
-		
+
 		// Setup the frame with size, background color, and close button
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.addWindowListener(new WindowAdapter() {
@@ -112,7 +112,7 @@ public class frame {
 	}
 
 	// Methods
-	public void typeText(KeyEvent e) {
+	private void typeText(KeyEvent e) {
 
 		int keyCode = e.getKeyCode();
 		char keyTyped = e.getKeyChar();
@@ -229,10 +229,8 @@ public class frame {
 		} else if (keyCode == 79 && command) {
 			open();
 			command = false;
-		}
-		else if ( keyCode == 78 && command)
-		{
-			new frame(800,800,null);
+		} else if (keyCode == 78 && command) {
+			new frame(800, 800, null);
 			command = false;
 		}
 
@@ -244,8 +242,8 @@ public class frame {
 			if (keyCode == 44 || keyCode == 46 || keyCode == 55 || keyCode == 83 || keyCode == 79 || keyCode == 78) {
 				if (!shift && !command) {
 					String previousText = label.getText();
-					previousText = previousText.substring(0, previousText.length() - 7);
-					label.setText(previousText + keyTyped + "</html>");
+					previousText = previousText.substring(0, previousText.length() - 8);
+					label.setText(previousText + keyTyped + "|" + "</html>");
 					frame.repaint();
 				}
 			} else {
@@ -261,8 +259,8 @@ public class frame {
 		}
 	}
 
-	// Save Function
-	public void save() {
+	// Save To File Function
+	private void save() {
 
 		// Default file name
 		String filename = "myText.txt";
@@ -281,34 +279,7 @@ public class frame {
 				filename += ".txt";
 			}
 
-			// Prepare the string to be saved
-			String toSave = label.getText();
-			// Remove the html tags
-			toSave = toSave.substring(6, toSave.length() - 8);
-			// Replace “&nbsp;” with a “ “
-			if (toSave.contains("&nbsp;")) {
-				toSave = toSave.replaceAll("&nbsp;", " ");
-			}
-			// Replace “&emsp;&emsp;&emsp;&emsp;” with a tab
-			if (toSave.contains("&emsp;&emsp;&emsp;&emsp;")) {
-				toSave = toSave.replaceAll("&emsp;&emsp;&emsp;&emsp;", "\t");
-			}
-			// Replace “&lt;” with a “<”
-			if (toSave.contains("&lt;")) {
-				toSave = toSave.replaceAll("&lt;", "<");
-			}
-			// Replace “&gt;” with a “>”
-			if (toSave.contains("&gt;")) {
-				toSave = toSave.replaceAll("&gt;", ">");
-			}
-			// Replace “&amp;” with a “&”
-			if (toSave.contains("&amp;")) {
-				toSave = toSave.replaceAll("&amp;", "&");
-			}
-			// Replace “<br>” with a enter
-			if (toSave.contains("<br>")) {
-				toSave = toSave.replaceAll("<br>", "\n");
-			}
+			String toSave = toPlainText(label.getText());
 
 			// Create a buffered writer to save the file
 			BufferedWriter bw = null;
@@ -341,8 +312,8 @@ public class frame {
 	}
 
 	// Open Function
-	public void open() {
-		
+	private void open() {
+
 		// Initiate filename, currentLine, and text variables
 		String filename = null;
 		String currentLine;
@@ -380,43 +351,80 @@ public class frame {
 					System.out.println("Error in closing the BufferedWriter" + ex);
 				}
 			}
-
-			// Replace “&” with a “&amp;”
-			if (text.contains("&")) {
-				text = text.replaceAll("&", "&amp;");
-			}
-			// Replace " " with a “&nbsp;”
-			if (text.contains(" ")) {
-				text = text.replaceAll(" ", "&nbsp;");
-			}
-			// Replace tab with “&emsp;&emsp;&emsp;&emsp;”
-			if (text.contains("\t")) {
-				text = text.replaceAll("\t", "&emsp;&emsp;&emsp;&emsp;");
-			}
-			// Replace "<" with a "&lt;"
-			if (text.contains("<")) {
-				text = text.replaceAll("<", "&lt;");
-			}
-			// Replace “>” with a “&gt;”
-			if (text.contains(">")) {
-				text = text.replaceAll(">", "&gt;");
-			}
-			// Replace ascii html with real html
-			if (text.contains("&lt;br&gt;")) {
-				text = text.replaceAll("&lt;br&gt;", "<br>");
-			}
-
-			// Adds the ending /html thingee so it work properlee
-			text = "<html>" + text;
-			text += "</html>";
+			
+			text = toHtml(text);
 
 			System.out.println(text);
 
-			new frame(800,800,text);
+			new frame(800, 800, text);
 		} else {
 			command = false;
 		}
 
+	}
+
+	private String toPlainText(String text) {
+		// Remove the html tags
+		text = text.substring(6, text.length() - 8);
+		// Replace “&nbsp;” with a “ “
+		if (text.contains("&nbsp;")) {
+			text = text.replaceAll("&nbsp;", " ");
+		}
+		// Replace “&emsp;&emsp;&emsp;&emsp;” with a tab
+		if (text.contains("&emsp;&emsp;&emsp;&emsp;")) {
+			text = text.replaceAll("&emsp;&emsp;&emsp;&emsp;", "\t");
+		}
+		// Replace “&lt;” with a “<”
+		if (text.contains("&lt;")) {
+			text = text.replaceAll("&lt;", "<");
+		}
+		// Replace “&gt;” with a “>”
+		if (text.contains("&gt;")) {
+			text = text.replaceAll("&gt;", ">");
+		}
+		// Replace “&amp;” with a “&”
+		if (text.contains("&amp;")) {
+			text = text.replaceAll("&amp;", "&");
+		}
+		// Replace “<br>” with a enter
+		if (text.contains("<br>")) {
+			text = text.replaceAll("<br>", "\n");
+		}
+
+		return text;
+	}
+
+	private String toHtml(String text) {
+		// Replace “&” with a “&amp;”
+		if (text.contains("&")) {
+			text = text.replaceAll("&", "&amp;");
+		}
+		// Replace " " with a “&nbsp;”
+		if (text.contains(" ")) {
+			text = text.replaceAll(" ", "&nbsp;");
+		}
+		// Replace tab with “&emsp;&emsp;&emsp;&emsp;”
+		if (text.contains("\t")) {
+			text = text.replaceAll("\t", "&emsp;&emsp;&emsp;&emsp;");
+		}
+		// Replace "<" with a "&lt;"
+		if (text.contains("<")) {
+			text = text.replaceAll("<", "&lt;");
+		}
+		// Replace “>” with a “&gt;”
+		if (text.contains(">")) {
+			text = text.replaceAll(">", "&gt;");
+		}
+		// Replace ascii html with real html
+		if (text.contains("&lt;br&gt;")) {
+			text = text.replaceAll("&lt;br&gt;", "<br>");
+		}
+
+		// Adds the ending /html thingee so it work properlee
+		text = "<html>" + text;
+		text += "</html>";
+		
+		return text;
 	}
 
 }
