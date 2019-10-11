@@ -16,73 +16,92 @@ public class frame {
 	boolean shift = false;
 	// Boolean for if command is pressed
 	boolean command = false;
+	// String of the previous save
+	String prevSave = "";
+	//Number of windows
+	static int windows = 0;
 
 	// Constructor
 	public frame(int xSize, int ySize, String text) {
+		windows++;
 		String previousText = label.getText();
+		System.out.println(previousText);
 		previousText = previousText.substring(0, previousText.length() - 7);
+		System.out.println(previousText);
 		if (text != null) {
 			previousText += text;
 		}
 		label.setText(previousText + "|</html>");
+		prevSave = toPlainText(label.getText());
+		
+		listeners();
 
 		formatStuff(xSize, ySize);
-
 	}
 
 	// Methods
-	public void formatStuff(int xSize, int ySize)
-	{
+	public void formatStuff(int xSize, int ySize) {
 		// Setup the frame with size, background color, and close button
-				frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-				frame.setSize(xSize, ySize);
-				frame.getContentPane().setBackground(Color.black);
-				frame.setLayout(new BorderLayout());
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame.setSize(xSize, ySize);
+		frame.getContentPane().setBackground(Color.black);
+		frame.setLayout(new BorderLayout());
 
-				// Intelligent way to do borders
-				JLabel label1 = new JLabel("<html> <br> <br></html>");
-				JLabel label2 = new JLabel(" ");
-				JLabel label3 = new JLabel("             ");
-				JLabel label4 = new JLabel("             ");
+		// Intelligent way to do borders
+		JLabel label1 = new JLabel("<html> <br> <br></html>");
+		JLabel label2 = new JLabel(" ");
+		JLabel label3 = new JLabel("             ");
+		JLabel label4 = new JLabel("             ");
 
-				// Set up the location, size, alignment, font, and font color of the text box
-				label.setVerticalAlignment(JLabel.TOP);
-				label.setBounds(21, 21, 758, 758);
-				label.setForeground(Color.white);
-				label.setFont(new Font("Courier", Font.PLAIN, 14));
+		// Set up the location, size, alignment, font, and font color of the text box
+		label.setVerticalAlignment(JLabel.TOP);
+		label.setBounds(21, 21, 758, 758);
+		label.setForeground(Color.white);
+		label.setFont(new Font("Courier", Font.PLAIN, 14));
 
-				// Add all content to the frame
-				frame.add(label, BorderLayout.CENTER);
-				frame.add(label1, BorderLayout.NORTH);
-				frame.add(label2, BorderLayout.SOUTH);
-				frame.add(label3, BorderLayout.EAST);
-				frame.add(label4, BorderLayout.WEST);
-				frame.setVisible(true);
+		// Add all content to the frame
+		frame.add(label, BorderLayout.CENTER);
+		frame.add(label1, BorderLayout.NORTH);
+		frame.add(label2, BorderLayout.SOUTH);
+		frame.add(label3, BorderLayout.EAST);
+		frame.add(label4, BorderLayout.WEST);
+		frame.setVisible(true);
 	}
-	
-	public void listeners()
-	{
+
+	public void listeners() {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				int result = JOptionPane.showConfirmDialog(null, "Your work is not saved. Do you wish to continue?",
-						"Confirm", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+				if (!isSaved(label.getText())) {
+					int result = JOptionPane.showConfirmDialog(null, "Your work is not saved. Do you wish to save it now?",
+							"Confirm", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
-				if (result == JOptionPane.YES_OPTION) {
-					System.exit(0);
-				} else {
-					save();
+					if (result == JOptionPane.NO_OPTION) {
+						windows--;
+						frame.dispose();
+					} else {
+						save();
+					}
+				}
+				else
+				{
+					windows--;
+					frame.dispose();
+				}
+				
+				if(windows <= 0)
+				{
 					System.exit(0);
 				}
 			}
 		});
-		
+
 		// Setup a JPanel for key typing
-				JPanel panel = new JPanel();
-				panel.setFocusTraversalKeysEnabled(false);
-				frame.getContentPane().add(panel);
-				panel.setFocusable(true);
-		
+		JPanel panel = new JPanel();
+		panel.setFocusTraversalKeysEnabled(false);
+		frame.getContentPane().add(panel);
+		panel.setFocusable(true);
+
 		panel.addKeyListener(new KeyListener() {
 			@Override
 			public void keyTyped(KeyEvent e) {
@@ -116,7 +135,7 @@ public class frame {
 			}
 		});
 	}
-	
+
 	private void typeText(KeyEvent e) {
 
 		int keyCode = e.getKeyCode();
@@ -214,6 +233,7 @@ public class frame {
 				bw = new BufferedWriter(fw);
 				// Write the string to the file
 				bw.write(toSave);
+				prevSave = toSave;
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -274,8 +294,6 @@ public class frame {
 			}
 
 			text = toHtml(text);
-
-			System.out.println(text);
 
 			new frame(800, 800, text);
 		} else {
@@ -342,8 +360,6 @@ public class frame {
 		}
 
 		// Adds the ending /html thingee so it work properlee
-		text = "<html>" + text;
-		text += "</html>";
 
 		return text;
 	}
@@ -386,6 +402,13 @@ public class frame {
 		}
 
 		return previousText;
+	}
+
+	private boolean isSaved(String text) {
+		if (toPlainText(text).equals(prevSave))
+			return true;
+		else
+			return false;
 	}
 
 }
