@@ -26,8 +26,42 @@ public class frame {
 		}
 		label.setText(previousText + "|</html>");
 
+		formatStuff(xSize, ySize);
+
+	}
+
+	// Methods
+	public void formatStuff(int xSize, int ySize)
+	{
 		// Setup the frame with size, background color, and close button
-		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+				frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+				frame.setSize(xSize, ySize);
+				frame.getContentPane().setBackground(Color.black);
+				frame.setLayout(new BorderLayout());
+
+				// Intelligent way to do borders
+				JLabel label1 = new JLabel("<html> <br> <br></html>");
+				JLabel label2 = new JLabel(" ");
+				JLabel label3 = new JLabel("             ");
+				JLabel label4 = new JLabel("             ");
+
+				// Set up the location, size, alignment, font, and font color of the text box
+				label.setVerticalAlignment(JLabel.TOP);
+				label.setBounds(21, 21, 758, 758);
+				label.setForeground(Color.white);
+				label.setFont(new Font("Courier", Font.PLAIN, 14));
+
+				// Add all content to the frame
+				frame.add(label, BorderLayout.CENTER);
+				frame.add(label1, BorderLayout.NORTH);
+				frame.add(label2, BorderLayout.SOUTH);
+				frame.add(label3, BorderLayout.EAST);
+				frame.add(label4, BorderLayout.WEST);
+				frame.setVisible(true);
+	}
+	
+	public void listeners()
+	{
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -42,14 +76,13 @@ public class frame {
 				}
 			}
 		});
-		frame.setSize(xSize, ySize);
-		frame.getContentPane().setBackground(Color.black);
-		frame.setLayout(new BorderLayout());
-
+		
 		// Setup a JPanel for key typing
-		JPanel panel = new JPanel();
-		panel.setFocusTraversalKeysEnabled(false);
-		frame.getContentPane().add(panel);
+				JPanel panel = new JPanel();
+				panel.setFocusTraversalKeysEnabled(false);
+				frame.getContentPane().add(panel);
+				panel.setFocusable(true);
+		
 		panel.addKeyListener(new KeyListener() {
 			@Override
 			public void keyTyped(KeyEvent e) {
@@ -82,31 +115,8 @@ public class frame {
 				typeText(e);
 			}
 		});
-		panel.setFocusable(true);
-
-		// Intelligent way to do borders
-		JLabel label1 = new JLabel("<html> <br> <br></html>");
-		JLabel label2 = new JLabel(" ");
-		JLabel label3 = new JLabel("             ");
-		JLabel label4 = new JLabel("             ");
-
-		// Set up the location, size, alignment, font, and font color of the text box
-		label.setVerticalAlignment(JLabel.TOP);
-		label.setBounds(21, 21, 758, 758);
-		label.setForeground(Color.white);
-		label.setFont(new Font("Courier", Font.PLAIN, 14));
-
-		// Add all content to the frame
-		frame.add(label, BorderLayout.CENTER);
-		frame.add(label1, BorderLayout.NORTH);
-		frame.add(label2, BorderLayout.SOUTH);
-		frame.add(label3, BorderLayout.EAST);
-		frame.add(label4, BorderLayout.WEST);
-		frame.setVisible(true);
-
 	}
-
-	// Methods
+	
 	private void typeText(KeyEvent e) {
 
 		int keyCode = e.getKeyCode();
