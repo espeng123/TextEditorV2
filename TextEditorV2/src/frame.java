@@ -209,6 +209,7 @@ public class frame {
 		}
 		previousText += "|</html>";
 		label.setText(previousText);
+		setSaveStatus();
 		frame.repaint();
 	}
 
@@ -262,7 +263,7 @@ public class frame {
 				System.out.println("Error in closing the BufferedWriter" + ex);
 			}
 		}
-		
+		setSaveStatus();
 		frame.setTitle("Text Editor - " + filename.substring((filename.lastIndexOf("/")+1),filename.indexOf(".txt")));
 	}
 
@@ -308,7 +309,7 @@ public class frame {
 			}
 
 			text = toHtml(text);
-
+			
 			new frame(800, 800, text, openFilename);
 		} else {
 			command = false;
@@ -423,6 +424,18 @@ public class frame {
 			return true;
 		else
 			return false;
+	}
+	
+	private void setSaveStatus()
+	{
+		if(!isSaved(label.getText()) && !(frame.getTitle().contains(" *")))
+		{
+			frame.setTitle(frame.getTitle() + " *");
+		}
+		if(isSaved(label.getText()) && frame.getTitle().equals(frame.getTitle() + " *"))
+		{
+			frame.setTitle(frame.getTitle().substring(0,frame.getTitle().length()-2));
+		}
 	}
 
 }
