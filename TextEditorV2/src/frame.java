@@ -189,7 +189,7 @@ public class frame {
 			open();
 			command = false;
 		} else if (keyCode == 78 && command) {
-			new frame(800, 800);
+			newFrame();
 			command = false;
 		}
 		// No ? box when hitting shift, caps lock, command, fn, control, alt, all the
@@ -315,6 +315,11 @@ public class frame {
 			command = false;
 		}
 
+	}
+	
+	private void newFrame()
+	{
+		new frame(800,800);
 	}
 
 	private String toPlainText(String text) {
