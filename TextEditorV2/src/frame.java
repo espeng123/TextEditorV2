@@ -8,8 +8,10 @@ import java.io.*;
 
 public class frame {
 	// Variables
+	// Filename
+	String filename = "/Untitled.txt";
 	// JFrame for the GUI
-	JFrame frame = new JFrame("GUI");
+	JFrame frame = new JFrame("");
 	// Main label for the text box
 	JLabel label = new JLabel("<html></html>", JLabel.LEFT);
 	// Boolean for if shift is pressed
@@ -18,22 +20,35 @@ public class frame {
 	boolean command = false;
 	// String of the previous save
 	String prevSave = "";
-	//Number of windows
+	// Number of windows
 	static int windows = 0;
 
 	// Constructor
-	public frame(int xSize, int ySize, String text) {
+	public frame(int xSize, int ySize, String text, String filename) {
+		frame.setTitle("Text Editor - " + filename.substring((filename.lastIndexOf("/")+1),filename.indexOf(".txt")));
 		windows++;
 		String previousText = label.getText();
-		System.out.println(previousText);
 		previousText = previousText.substring(0, previousText.length() - 7);
-		System.out.println(previousText);
 		if (text != null) {
 			previousText += text;
 		}
 		label.setText(previousText + "|</html>");
 		prevSave = toPlainText(label.getText());
-		
+		this.filename = filename;
+
+		listeners();
+
+		formatStuff(xSize, ySize);
+	}
+
+	public frame(int xSize, int ySize) {
+		frame.setTitle("Text Editor - " + filename.substring((filename.lastIndexOf("/")+1),filename.indexOf(".txt")));
+		windows++;
+		String previousText = label.getText();
+		previousText = previousText.substring(0, previousText.length() - 7);
+		label.setText(previousText + "|</html>");
+		prevSave = toPlainText(label.getText());
+
 		listeners();
 
 		formatStuff(xSize, ySize);
@@ -73,8 +88,9 @@ public class frame {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				if (!isSaved(label.getText())) {
-					int result = JOptionPane.showConfirmDialog(null, "Your work is not saved. Do you wish to save it now?",
-							"Confirm", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+					int result = JOptionPane.showConfirmDialog(null,
+							"Your work is not saved. Do you wish to save it now?", "Confirm", JOptionPane.YES_NO_OPTION,
+							JOptionPane.QUESTION_MESSAGE);
 
 					if (result == JOptionPane.NO_OPTION) {
 						windows--;
@@ -82,15 +98,12 @@ public class frame {
 					} else {
 						save();
 					}
-				}
-				else
-				{
+				} else {
 					windows--;
 					frame.dispose();
 				}
-				
-				if(windows <= 0)
-				{
+
+				if (windows <= 0) {
 					System.exit(0);
 				}
 			}
@@ -176,7 +189,7 @@ public class frame {
 			open();
 			command = false;
 		} else if (keyCode == 78 && command) {
-			new frame(800, 800, null);
+			new frame(800, 800);
 			command = false;
 		}
 		// No ? box when hitting shift, caps lock, command, fn, control, alt, all the
@@ -203,60 +216,61 @@ public class frame {
 	private void save() {
 
 		// Default file name
-		String filename = "myText.txt";
+		if (filename.equals("/Untitled.txt")) {
+			// File location chooser
+			JFileChooser j = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+			// j.setDefaultCloseOperation(JFileChooser.EXIT_ON_CLOSE);
+			int r = j.showSaveDialog(null);
+			// If the user chooses to save:
+			if (r == JFileChooser.APPROVE_OPTION) {
+				// Set the filename to the path of the selected file
+				filename = j.getSelectedFile().getAbsolutePath();
 
-		// File location chooser
-		JFileChooser j = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-		// j.setDefaultCloseOperation(JFileChooser.EXIT_ON_CLOSE);
-		int r = j.showSaveDialog(null);
-		// If the user chooses to save:
-		if (r == JFileChooser.APPROVE_OPTION) {
-			// Set the filename to the path of the selected file
-			filename = j.getSelectedFile().getAbsolutePath();
-
-			// If the user forgets .txt add it automatically
-			if (!filename.contains(".txt")) {
-				filename += ".txt";
-			}
-
-			String toSave = toPlainText(label.getText());
-
-			// Create a buffered writer to save the file
-			BufferedWriter bw = null;
-			try {
-				// Create a file at the designated filename
-				File file = new File(filename);
-				if (!file.exists()) {
-					file.createNewFile();
+				// If the user forgets .txt add it automatically
+				if (!filename.contains(".txt")) {
+					filename += ".txt";
 				}
-				FileWriter fw = new FileWriter(file);
-				bw = new BufferedWriter(fw);
-				// Write the string to the file
-				bw.write(toSave);
-				prevSave = toSave;
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} finally {
-				try {
-					// Close the writer
-					if (bw != null) {
-						bw.close();
-					}
-				} catch (Exception ex) {
-					System.out.println("Error in closing the BufferedWriter" + ex);
-				}
+			} else {
+				command = false;
 			}
-		} else {
-			command = false;
 		}
+		String toSave = toPlainText(label.getText());
+
+		// Create a buffered writer to save the file
+		BufferedWriter bw = null;
+		try {
+			// Create a file at the designated filename
+			File file = new File(filename);
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+			FileWriter fw = new FileWriter(file);
+			bw = new BufferedWriter(fw);
+			// Write the string to the file
+			bw.write(toSave);
+			prevSave = toSave;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				// Close the writer
+				if (bw != null) {
+					bw.close();
+				}
+			} catch (Exception ex) {
+				System.out.println("Error in closing the BufferedWriter" + ex);
+			}
+		}
+		
+		frame.setTitle("Text Editor - " + filename.substring((filename.lastIndexOf("/")+1),filename.indexOf(".txt")));
 	}
 
 	// Open Function
 	private void open() {
 
-		// Initiate filename, currentLine, and text variables
-		String filename = null;
+		// Initiate currentLine, and text variables
+		String openFilename;
 		String currentLine;
 		String text = "";
 
@@ -267,12 +281,12 @@ public class frame {
 		int r = j.showOpenDialog(null);
 		// Get the filepath to the file the user wants open
 		if (r == JFileChooser.APPROVE_OPTION) {
-			filename = j.getSelectedFile().getAbsolutePath();
+			openFilename = j.getSelectedFile().getAbsolutePath();
 
 			BufferedReader br = null;
 			try {
 				// Open the file and add line by line to the text
-				FileReader fr = new FileReader(filename);
+				FileReader fr = new FileReader(openFilename);
 				br = new BufferedReader(fr);
 				currentLine = br.readLine();
 				while (currentLine != null) {
@@ -295,7 +309,7 @@ public class frame {
 
 			text = toHtml(text);
 
-			new frame(800, 800, text);
+			new frame(800, 800, text, openFilename);
 		} else {
 			command = false;
 		}
