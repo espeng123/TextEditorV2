@@ -25,7 +25,9 @@ public class frame {
 
 	// Constructor
 	public frame(int xSize, int ySize, String text, String filename) {
-		frame.setTitle("Text Editor - " + filename.substring((filename.lastIndexOf("/")+1),filename.indexOf(".txt")));
+		Menu();
+		frame.setTitle(
+				"Text Editor - " + filename.substring((filename.lastIndexOf("/") + 1), filename.indexOf(".txt")));
 		windows++;
 		String previousText = label.getText();
 		previousText = previousText.substring(0, previousText.length() - 7);
@@ -42,7 +44,9 @@ public class frame {
 	}
 
 	public frame(int xSize, int ySize) {
-		frame.setTitle("Text Editor - " + filename.substring((filename.lastIndexOf("/")+1),filename.indexOf(".txt")));
+		Menu();
+		frame.setTitle(
+				"Text Editor - " + filename.substring((filename.lastIndexOf("/") + 1), filename.indexOf(".txt")));
 		windows++;
 		String previousText = label.getText();
 		previousText = previousText.substring(0, previousText.length() - 7);
@@ -147,6 +151,73 @@ public class frame {
 				typeText(e);
 			}
 		});
+	}
+
+	public void Menu() {
+		JMenuBar menuBar = new JMenuBar();
+		JMenu fileMenu = new JMenu("File");
+		JMenuItem newMenuItem = new JMenuItem("New");
+		newMenuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				newFrame();
+			}
+		});
+		JMenuItem openMenuItem = new JMenuItem("Open");
+		openMenuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				open();
+			}
+		});
+		JMenuItem saveMenuItem = new JMenuItem("Save");
+		saveMenuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				save();
+			}
+		});
+		JMenuItem closeMenuItem = new JMenuItem("Close");
+		closeMenuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				windows--;
+				frame.dispose();
+			}
+		});
+
+		fileMenu.add(newMenuItem);
+		fileMenu.add(openMenuItem);
+		fileMenu.add(closeMenuItem);
+		fileMenu.add(saveMenuItem);
+		
+		JMenu editMenu = new JMenu("Edit");
+		JMenuItem undoMenuItem = new JMenuItem("Undo");
+		newMenuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+			}
+		});
+		JMenuItem redoMenuItem = new JMenuItem("Redo");
+		openMenuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+			}
+		});
+
+		editMenu.add(undoMenuItem);
+		editMenu.add(redoMenuItem);
+
+
+		menuBar.add(fileMenu);
+		menuBar.add(editMenu);
+		frame.setJMenuBar(menuBar);
 	}
 
 	private void typeText(KeyEvent e) {
@@ -264,7 +335,8 @@ public class frame {
 			}
 		}
 		setSaveStatus();
-		frame.setTitle("Text Editor - " + filename.substring((filename.lastIndexOf("/")+1),filename.indexOf(".txt")));
+		frame.setTitle(
+				"Text Editor - " + filename.substring((filename.lastIndexOf("/") + 1), filename.indexOf(".txt")));
 	}
 
 	// Open Function
@@ -309,17 +381,16 @@ public class frame {
 			}
 
 			text = toHtml(text);
-			
+
 			new frame(800, 800, text, openFilename);
 		} else {
 			command = false;
 		}
 
 	}
-	
-	private void newFrame()
-	{
-		new frame(800,800);
+
+	private void newFrame() {
+		new frame(800, 800);
 	}
 
 	private String toPlainText(String text) {
@@ -430,16 +501,13 @@ public class frame {
 		else
 			return false;
 	}
-	
-	private void setSaveStatus()
-	{
-		if(!isSaved(label.getText()) && !(frame.getTitle().contains(" *")))
-		{
+
+	private void setSaveStatus() {
+		if (!isSaved(label.getText()) && !(frame.getTitle().contains(" *"))) {
 			frame.setTitle(frame.getTitle() + " *");
 		}
-		if(isSaved(label.getText()) && frame.getTitle().equals(frame.getTitle() + " *"))
-		{
-			frame.setTitle(frame.getTitle().substring(0,frame.getTitle().length()-2));
+		if (isSaved(label.getText()) && frame.getTitle().equals(frame.getTitle() + " *")) {
+			frame.setTitle(frame.getTitle().substring(0, frame.getTitle().length() - 2));
 		}
 	}
 
