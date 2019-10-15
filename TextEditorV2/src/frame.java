@@ -510,5 +510,14 @@ public class frame {
 			frame.setTitle(frame.getTitle().substring(0, frame.getTitle().length() - 2));
 		}
 	}
+	
+	private void undo(String text)
+	{
+		if(text.equals("<html></html>") || text.equals("<html>|</html>"))
+		{
+			//DO NOTHINNG
+			
+		}
+	}
 
 }
