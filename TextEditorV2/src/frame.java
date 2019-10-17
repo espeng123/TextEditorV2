@@ -5,7 +5,7 @@ import javax.swing.filechooser.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.ArrayList;
+import java.util.Stack;
 
 public class frame {
 	// Variables
@@ -16,15 +16,15 @@ public class frame {
 	// Main label for the text box
 	JLabel label = new JLabel("<html></html>", JLabel.LEFT);
 	// Boolean for if shift is pressed
-	boolean shift = false;
+	static boolean shift = false;
 	// Boolean for if command is pressed
-	boolean command = false;
+	static boolean command = false;
 	// String of the previous save
 	String prevSave = "";
 	// Number of windows
 	static int windows = 0;
-	//ArrayList of strings to be redone
-	ArrayList<String> undone = new ArrayList<String>();
+	// ArrayList of strings to be redone
+	Stack<String> undone = new Stack<String>();
 
 	// Constructor
 	public frame(int xSize, int ySize, String text, String filename) {
@@ -197,14 +197,17 @@ public class frame {
 		fileMenu.add(openMenuItem);
 		fileMenu.add(closeMenuItem);
 		fileMenu.add(saveMenuItem);
-		
+
 		JMenu editMenu = new JMenu("Edit");
 		JMenuItem undoMenuItem = new JMenuItem("Undo");
 		undoMenuItem.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				undo(label.getText());
+				String text = undo(label.getText());
+				text += "|</html>";
+				label.setText(text);
+				frame.repaint();
 			}
 		});
 		JMenuItem redoMenuItem = new JMenuItem("Redo");
@@ -212,13 +215,15 @@ public class frame {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				redo(label.getText());
+				String text = redo(label.getText());
+				text += "|</html>";
+				label.setText(text);
+				frame.repaint();
 			}
 		});
 
 		editMenu.add(undoMenuItem);
 		editMenu.add(redoMenuItem);
-
 
 		menuBar.add(fileMenu);
 		menuBar.add(editMenu);
@@ -259,24 +264,25 @@ public class frame {
 			// Implements saving through command + s
 		} else if (keyCode == 83 && command) {
 			save();
-			command = false;
 			// Implements opening through command + o
 		} else if (keyCode == 79 && command) {
 			open();
-			command = false;
 		} else if (keyCode == 78 && command) {
 			newFrame();
-			command = false;
 		}
-		else if (keyCode == 90 && command) {
-			undo(label.getText());
-			command = false;
+
+		else if (keyCode == 90 && command && shift) {
+			previousText = redo(label.getText());
+		} else if (keyCode == 90 && command) {
+			previousText = undo(label.getText());
 		}
+
 		// No ? box when hitting shift, caps lock, command, fn, control, alt, all the
 		// arrow keys, and right option keys
 		else if (keyCode != 16 && keyCode != 20 && keyCode != 157 && keyCode != 0 && keyCode != 17 && keyCode != 18
 				&& keyCode != 37 && keyCode != 38 && keyCode != 39 && keyCode != 40 && keyCode != 65406
 				&& keyCode != 27) {
+			undone.clear();
 			if (keyCode == 44 || keyCode == 46 || keyCode == 55 || keyCode == 83 || keyCode == 79 || keyCode == 78) {
 				if (!shift && !command) {
 					previousText += keyTyped;
@@ -296,6 +302,7 @@ public class frame {
 	// Save To File Function
 	private void save() {
 
+		boolean moveOn = false;
 		// Default file name
 		if (filename.equals("/Untitled.txt")) {
 			// File location chooser
@@ -311,41 +318,51 @@ public class frame {
 				if (!filename.contains(".txt")) {
 					filename += ".txt";
 				}
-			} else {
+				moveOn = true;
+			}
+			else
+			{
 				command = false;
 			}
 		}
+		else
+		{
+			moveOn = true;
+		}
 		String toSave = toPlainText(label.getText());
 
-		// Create a buffered writer to save the file
-		BufferedWriter bw = null;
-		try {
-			// Create a file at the designated filename
-			File file = new File(filename);
-			if (!file.exists()) {
-				file.createNewFile();
-			}
-			FileWriter fw = new FileWriter(file);
-			bw = new BufferedWriter(fw);
-			// Write the string to the file
-			bw.write(toSave);
-			prevSave = toSave;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
+		if( moveOn )
+		{
+			// Create a buffered writer to save the file
+			BufferedWriter bw = null;
 			try {
-				// Close the writer
-				if (bw != null) {
-					bw.close();
+				// Create a file at the designated filename
+				File file = new File(filename);
+				if (!file.exists()) {
+					file.createNewFile();
 				}
-			} catch (Exception ex) {
-				System.out.println("Error in closing the BufferedWriter" + ex);
+				FileWriter fw = new FileWriter(file);
+				bw = new BufferedWriter(fw);
+				// Write the string to the file
+				bw.write(toSave);
+				prevSave = toSave;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+				try {
+					// Close the writer
+					if (bw != null) {
+						bw.close();
+					}
+				} catch (Exception ex) {
+					System.out.println("Error in closing the BufferedWriter" + ex);
+				}
 			}
+			setSaveStatus();
+			frame.setTitle(
+					"Text Editor - " + filename.substring((filename.lastIndexOf("/") + 1), filename.indexOf(".txt")));
 		}
-		setSaveStatus();
-		frame.setTitle(
-				"Text Editor - " + filename.substring((filename.lastIndexOf("/") + 1), filename.indexOf(".txt")));
 	}
 
 	// Open Function
@@ -392,7 +409,9 @@ public class frame {
 			text = toHtml(text);
 
 			new frame(800, 800, text, openFilename);
-		} else {
+		}
+		else
+		{
 			command = false;
 		}
 
@@ -519,57 +538,36 @@ public class frame {
 			frame.setTitle(frame.getTitle().substring(0, frame.getTitle().length() - 2));
 		}
 	}
-	
-	private void undo(String text)
-	{
-		if(text.equals("<html></html>") || text.equals("<html>|</html>"))
-		{
-			//DO NOTHINNG
+
+	private String undo(String text) {
+		text = text.substring(0, text.length() - 8);
+		if (text.equals("<html>")) {
+			// DO NOTHING
+		} else {
+			if (text.contains("&nbsp;")) {
+				undone.push(text.substring(text.lastIndexOf("&nbsp;"), text.length()));
+				text = text.substring(0, text.lastIndexOf("&nbsp;"));
+			} else if (text.contains("&emsp;")) {
+				undone.push(text.substring(text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"), text.length()));
+				text = text.substring(0, text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"));
+			} else if (text.contains("<br>")) {
+				undone.push(text.substring(text.lastIndexOf("<br>"), text.length()));
+				text = text.substring(0, text.lastIndexOf("<br>"));
+			} else {
+				text = text.substring(6, text.length());
+				undone.push(text);
+				text = "<html>";
+			}
 		}
-		else
-		{
-			System.out.println("here1");
-			if( text.contains("&nbsp;"))
-			{
-				System.out.println("here2");
-				text = text.substring(0,text.length()-8);
-				System.out.println(text);
-				undone.add(text.substring(text.lastIndexOf("&nbsp;"),text.length()));
-				System.out.println(undone.get(0));
-				text = text.substring(0,text.lastIndexOf("&nbsp;"));
-				System.out.println(text);
-			}
-			else if( text.contains("&emsp;"))
-			{
-				text = text.substring(0,text.length()-8);
-				undone.add(text.substring(text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"),text.length()));
-				text = text.substring(0,text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"));
-			}
-			else if( text.contains("<br>"))
-			{
-				text = text.substring(0,text.length()-8);
-				undone.add(text.substring(text.lastIndexOf("<br>"),text.length()));
-				text = text.substring(0,text.lastIndexOf("<br>"));
-			}
-			else
-			{
-				text="<html>";
-			}
-			label.setText(text+"|</html>");
-			System.out.println(label.getText());
-			frame.repaint();
-		}
+		return text;
 	}
-	
-	private void redo(String text)
-	{
-		if( undone.size() >= 1)
-		{
-			text = text.substring(0,text.length()-8);
-			text += undone.remove(0);
-			label.setText(text+"|</html>");
-			frame.repaint();
+
+	private String redo(String text) {
+		if (undone.size() >= 1) {
+			text = text.substring(0, text.length() - 8);
+			text += undone.pop();
 		}
+		return text;
 	}
 
 }
