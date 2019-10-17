@@ -5,6 +5,7 @@ import javax.swing.filechooser.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.ArrayList;
 
 public class frame {
 	// Variables
@@ -22,6 +23,8 @@ public class frame {
 	String prevSave = "";
 	// Number of windows
 	static int windows = 0;
+	//ArrayList of strings to be redone
+	ArrayList<String> undone = new ArrayList<String>();
 
 	// Constructor
 	public frame(int xSize, int ySize, String text, String filename) {
@@ -197,17 +200,19 @@ public class frame {
 		
 		JMenu editMenu = new JMenu("Edit");
 		JMenuItem undoMenuItem = new JMenuItem("Undo");
-		newMenuItem.addActionListener(new ActionListener() {
+		undoMenuItem.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
+				undo(label.getText());
 			}
 		});
 		JMenuItem redoMenuItem = new JMenuItem("Redo");
-		openMenuItem.addActionListener(new ActionListener() {
+		redoMenuItem.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
+				redo(label.getText());
 			}
 		});
 
@@ -261,6 +266,10 @@ public class frame {
 			command = false;
 		} else if (keyCode == 78 && command) {
 			newFrame();
+			command = false;
+		}
+		else if (keyCode == 90 && command) {
+			undo(label.getText());
 			command = false;
 		}
 		// No ? box when hitting shift, caps lock, command, fn, control, alt, all the
@@ -516,7 +525,50 @@ public class frame {
 		if(text.equals("<html></html>") || text.equals("<html>|</html>"))
 		{
 			//DO NOTHINNG
-			
+		}
+		else
+		{
+			System.out.println("here1");
+			if( text.contains("&nbsp;"))
+			{
+				System.out.println("here2");
+				text = text.substring(0,text.length()-8);
+				System.out.println(text);
+				undone.add(text.substring(text.lastIndexOf("&nbsp;"),text.length()));
+				System.out.println(undone.get(0));
+				text = text.substring(0,text.lastIndexOf("&nbsp;"));
+				System.out.println(text);
+			}
+			else if( text.contains("&emsp;"))
+			{
+				text = text.substring(0,text.length()-8);
+				undone.add(text.substring(text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"),text.length()));
+				text = text.substring(0,text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"));
+			}
+			else if( text.contains("<br>"))
+			{
+				text = text.substring(0,text.length()-8);
+				undone.add(text.substring(text.lastIndexOf("<br>"),text.length()));
+				text = text.substring(0,text.lastIndexOf("<br>"));
+			}
+			else
+			{
+				text="<html>";
+			}
+			label.setText(text+"|</html>");
+			System.out.println(label.getText());
+			frame.repaint();
+		}
+	}
+	
+	private void redo(String text)
+	{
+		if( undone.size() >= 1)
+		{
+			text = text.substring(0,text.length()-8);
+			text += undone.remove(0);
+			label.setText(text+"|</html>");
+			frame.repaint();
 		}
 	}
 
