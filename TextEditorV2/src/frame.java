@@ -25,6 +25,8 @@ public class frame {
 	static int windows = 0;
 	// ArrayList of strings to be redone
 	Stack<String> undone = new Stack<String>();
+	int cursorIndex = -1;
+
 
 	// Constructor
 	public frame(int xSize, int ySize, String text, String filename) {
@@ -232,13 +234,17 @@ public class frame {
 
 	private void typeText(KeyEvent e) {
 
+		boolean moveCursor = false;
 		int keyCode = e.getKeyCode();
 		char keyTyped = e.getKeyChar();
 		String previousText = label.getText();
 		if (previousText.equals("<html></html>")) {
 			previousText = previousText.substring(0, previousText.length() - 7);
 		} else {
-			previousText = previousText.substring(0, previousText.length() - 8);
+			previousText = previousText.substring(0, previousText.length() - 7);
+			if (previousText.charAt(previousText.length()-1) == '|') {
+				previousText = previousText.substring(0, previousText.length()-1);
+			}
 		}
 		// Implements backspace
 		if (keyTyped == 8) {
@@ -276,11 +282,15 @@ public class frame {
 		} else if (keyCode == 90 && command) {
 			previousText = undo(label.getText());
 		}
+		
+		else if (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) {
+			moveCursor = true;
+		}
 
 		// No ? box when hitting shift, caps lock, command, fn, control, alt, all the
 		// arrow keys, and right option keys
 		else if (keyCode != 16 && keyCode != 20 && keyCode != 157 && keyCode != 0 && keyCode != 17 && keyCode != 18
-				&& keyCode != 37 && keyCode != 38 && keyCode != 39 && keyCode != 40 && keyCode != 65406
+				&& keyCode != 65406
 				&& keyCode != 27) {
 			undone.clear();
 			if (keyCode == 44 || keyCode == 46 || keyCode == 55 || keyCode == 83 || keyCode == 79 || keyCode == 78) {
@@ -293,7 +303,17 @@ public class frame {
 
 			}
 		}
-		previousText += "|</html>";
+		
+		if (moveCursor == false) {
+			previousText += "|</html>";
+		} else {
+			if (cursorIndex == -1) {
+				previousText += "|";
+				cursorIndex = previousText.length()-1;
+			}
+			previousText = moveCursor(previousText, keyCode, cursorIndex);
+		}
+		
 		label.setText(previousText);
 		setSaveStatus();
 		frame.repaint();
@@ -568,6 +588,30 @@ public class frame {
 			text += undone.pop();
 		}
 		return text;
+	}
+	
+	// Method to move the cursor with arrow keys
+	private String moveCursor(String previousText, int keyCode, int cursor) {
+		if (keyCode == 37) {
+			//System.out.println(previousText);
+			//System.out.println(previousText.charAt(cursor-1));
+			previousText = swapCursor(previousText, cursor-1, cursor);
+			cursorIndex = Math.max(cursorIndex-1, 0);
+		} else if (keyCode == 39) {
+			previousText = swapCursor(previousText, Math.min(cursor+1, previousText.length()-1), cursor);
+			cursorIndex = cursorIndex + 1;
+		}
+		System.out.println(previousText);
+		return previousText + "</html>";
+	}
+
+	// Method to swap to characters in a string
+	private String swapCursor(String text, int index1, int index2) {
+	        char ch[] = text.toCharArray(); 
+	        char temp = ch[index1]; 
+	        ch[index1] = ch[index2];
+	        ch[index2] = temp; 
+	        return String.valueOf(ch);
 	}
 
 }
