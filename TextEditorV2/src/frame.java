@@ -26,6 +26,7 @@ public class frame {
 	// ArrayList of strings to be redone
 	Stack<String> undone = new Stack<String>();
 	int cursorIndex = -1;
+	String copied = "";
 
 
 	// Constructor
@@ -282,6 +283,13 @@ public class frame {
 		} else if (keyCode == 90 && command) {
 			previousText = undo(label.getText());
 		}
+		else if (keyCode == 67 && command) {
+			copy(label.getText());
+			System.out.println(copied);
+		}
+		else if (keyCode == 86 && command) {
+			previousText = paste(label.getText());
+		}
 		
 		else if (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) {
 			moveCursor = true;
@@ -293,7 +301,7 @@ public class frame {
 				&& keyCode != 65406
 				&& keyCode != 27) {
 			undone.clear();
-			if (keyCode == 44 || keyCode == 46 || keyCode == 55 || keyCode == 83 || keyCode == 79 || keyCode == 78) {
+			if (keyCode == 44 || keyCode == 46 || keyCode == 55 ) {
 				if (!shift && !command) {
 					previousText += keyTyped;
 
@@ -305,9 +313,16 @@ public class frame {
 		}
 		
 		if (moveCursor == false) {
-			previousText += "|</html>";
+			if(cursorIndex == -1 || cursorIndex == previousText.length())
+			{
+				previousText += "|</html>";
+			}
+			else
+			{
+				previousText += "</html>";
+			}
 		} else {
-			if (cursorIndex == -1) {
+			if (cursorIndex == -1 ) {
 				previousText += "|";
 				cursorIndex = previousText.length()-1;
 			}
@@ -539,7 +554,7 @@ public class frame {
 		else {
 			previousText = previousText.substring(0, previousText.length() - 1);
 		}
-
+		
 		return previousText;
 	}
 
@@ -612,6 +627,16 @@ public class frame {
 	        ch[index1] = ch[index2];
 	        ch[index2] = temp; 
 	        return String.valueOf(ch);
+	}
+	
+	public void copy (String text)
+	{
+		copied = text.substring(cursorIndex+1,text.length()-7);
+	}
+	
+	public String paste (String text)
+	{
+		return text.substring(0,cursorIndex-1) + copied + text.substring(cursorIndex,text.length());
 	}
 
 }
