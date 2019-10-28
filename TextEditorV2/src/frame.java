@@ -25,9 +25,8 @@ public class frame {
 	static int windows = 0;
 	// ArrayList of strings to be redone
 	Stack<String> undone = new Stack<String>();
-	int cursorIndex = -1;
+	int cursorIndex = 6;
 	String copied = "";
-
 
 	// Constructor
 	public frame(int xSize, int ySize, String text, String filename) {
@@ -235,39 +234,51 @@ public class frame {
 
 	private void typeText(KeyEvent e) {
 
-		boolean moveCursor = false;
 		int keyCode = e.getKeyCode();
 		char keyTyped = e.getKeyChar();
+		String textToAdd = "";
 		String previousText = label.getText();
 		if (previousText.equals("<html></html>")) {
 			previousText = previousText.substring(0, previousText.length() - 7);
 		} else {
 			previousText = previousText.substring(0, previousText.length() - 7);
-			if (previousText.charAt(previousText.length()-1) == '|') {
-				previousText = previousText.substring(0, previousText.length()-1);
+			if(cursorIndex != previousText.length()-1)
+			{
+				previousText = previousText.substring(0,cursorIndex) + previousText.substring(cursorIndex+1,previousText.length());
+			}
+			else
+			{
+				previousText = previousText.substring(0,cursorIndex);
 			}
 		}
 		// Implements backspace
 		if (keyTyped == 8) {
-			previousText = delete(previousText);
+			if(cursorIndex == previousText.length()-1)
+			{
+				previousText = delete(previousText);
+			}
+			else
+			{
+				previousText = delete(previousText.substring(0,cursorIndex)) + previousText.substring(cursorIndex,previousText.length());
+			}
 			// If the space key has been pressed
 		} else if (keyTyped == 32) {
-			previousText += "&nbsp;";
+			textToAdd = "&nbsp;";
 			// If TAB was entered
 		} else if (keyCode == 9) {
-			previousText += "&emsp;&emsp;&emsp;&emsp;";
+			textToAdd = "&emsp;&emsp;&emsp;&emsp;";
 			// IF they tried to type “<”
 		} else if (keyCode == 44 && shift) {
-			previousText += "&lt;";
+			textToAdd = "&lt;";
 			// IF they tried to type “>”
 		} else if (keyCode == 46 && shift) {
-			previousText += "&gt;";
+			textToAdd = "&gt;";
 			// IF they tried to type “&”
 		} else if (keyCode == 55 && shift) {
-			previousText += "&amp;";
+			textToAdd = "&amp;";
 			// IF they pressed enter or return
 		} else if (keyTyped == 10) {
-			previousText += "<br>";
+			textToAdd = "<br>";
 			// Implements saving through command + s
 		} else if (keyCode == 83 && command) {
 			save();
@@ -282,53 +293,42 @@ public class frame {
 			previousText = redo(label.getText());
 		} else if (keyCode == 90 && command) {
 			previousText = undo(label.getText());
-		}
-		else if (keyCode == 67 && command) {
+		} else if (keyCode == 67 && command) {
 			copy(label.getText());
 			System.out.println(copied);
-		}
-		else if (keyCode == 86 && command) {
+		} else if (keyCode == 86 && command) {
 			previousText = paste(label.getText());
 		}
-		
+
 		else if (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) {
-			moveCursor = true;
+			moveCursor(previousText, keyCode);
 		}
 
 		// No ? box when hitting shift, caps lock, command, fn, control, alt, all the
 		// arrow keys, and right option keys
 		else if (keyCode != 16 && keyCode != 20 && keyCode != 157 && keyCode != 0 && keyCode != 17 && keyCode != 18
-				&& keyCode != 65406
-				&& keyCode != 27) {
+				&& keyCode != 65406 && keyCode != 27) {
 			undone.clear();
-			if (keyCode == 44 || keyCode == 46 || keyCode == 55 ) {
+			if (keyCode == 44 || keyCode == 46 || keyCode == 55) {
 				if (!shift && !command) {
-					previousText += keyTyped;
+					textToAdd += keyTyped;
 
 				}
 			} else {
-				previousText += keyTyped;
+				textToAdd += keyTyped;
+			}
+		}
+		
+		if(!textToAdd.equals(""))
+		{
+			previousText = previousText.substring(0,cursorIndex) + textToAdd + previousText.substring(cursorIndex,previousText.length());
+		}
+		moveCursor(previousText.length() - label.getText().substring(0, label.getText().length() - 8).length());
 
-			}
-		}
-		
-		if (moveCursor == false) {
-			if(cursorIndex == -1 || cursorIndex == previousText.length())
-			{
-				previousText += "|</html>";
-			}
-			else
-			{
-				previousText += "</html>";
-			}
-		} else {
-			if (cursorIndex == -1 ) {
-				previousText += "|";
-				cursorIndex = previousText.length()-1;
-			}
-			previousText = moveCursor(previousText, keyCode, cursorIndex);
-		}
-		
+		previousText = addCursor(previousText);
+
+		previousText += "</html>";
+
 		label.setText(previousText);
 		setSaveStatus();
 		frame.repaint();
@@ -354,20 +354,15 @@ public class frame {
 					filename += ".txt";
 				}
 				moveOn = true;
-			}
-			else
-			{
+			} else {
 				command = false;
 			}
-		}
-		else
-		{
+		} else {
 			moveOn = true;
 		}
 		String toSave = toPlainText(label.getText());
 
-		if( moveOn )
-		{
+		if (moveOn) {
 			// Create a buffered writer to save the file
 			BufferedWriter bw = null;
 			try {
@@ -444,9 +439,7 @@ public class frame {
 			text = toHtml(text);
 
 			new frame(800, 800, text, openFilename);
-		}
-		else
-		{
+		} else {
 			command = false;
 		}
 
@@ -554,7 +547,7 @@ public class frame {
 		else {
 			previousText = previousText.substring(0, previousText.length() - 1);
 		}
-		
+
 		return previousText;
 	}
 
@@ -604,39 +597,78 @@ public class frame {
 		}
 		return text;
 	}
-	
-	// Method to move the cursor with arrow keys
-	private String moveCursor(String previousText, int keyCode, int cursor) {
-		if (keyCode == 37) {
-			//System.out.println(previousText);
-			//System.out.println(previousText.charAt(cursor-1));
-			previousText = swapCursor(previousText, cursor-1, cursor);
-			cursorIndex = Math.max(cursorIndex-1, 0);
-		} else if (keyCode == 39) {
-			previousText = swapCursor(previousText, Math.min(cursor+1, previousText.length()-1), cursor);
-			cursorIndex = cursorIndex + 1;
-		}
-		System.out.println(previousText);
-		return previousText + "</html>";
+
+	public void moveCursor(int num) {
+		cursorIndex += num;
 	}
 
-	// Method to swap to characters in a string
-	private String swapCursor(String text, int index1, int index2) {
-	        char ch[] = text.toCharArray(); 
-	        char temp = ch[index1]; 
-	        ch[index1] = ch[index2];
-	        ch[index2] = temp; 
-	        return String.valueOf(ch);
+	public void moveCursor(String text, int keyCode) {
+		int num = 1;
+		//Moving Right
+		if (keyCode == 39 && cursorIndex != text.length()) {
+			if(command)
+			{
+			}
+			//if the next character after the cursor is ASCII
+			if( text.substring(cursorIndex,text.length()).indexOf("&") == 0 )
+			{
+				//if the ASCII after the cursor is a tab set the num to move cursor to 24
+				if( text.substring(cursorIndex,text.length()).substring(0,text.substring(cursorIndex,text.length()).indexOf(";")+1).equals("&emsp;"))
+				{
+					num = 24;
+				}
+				//otherwise set the num equal to the length of the ASCII string
+				else
+				{
+					num = text.substring(cursorIndex,text.length()).indexOf(";")+1;
+				}
+			}
+			else if( text.substring(cursorIndex,text.length()).indexOf("<br>") == 0)
+			{
+				num = 4;
+			}
+			cursorIndex += num;
+			//Moving Left
+		} else if (keyCode == 37 && cursorIndex != 6) {
+			//if the character before the cursor is a ;
+			if( text.substring(0,cursorIndex).lastIndexOf(";") == text.substring(0,cursorIndex).length()-1 )
+			{
+				//if it is a ; then make sure it is actually ASCII
+				if(text.substring(0,cursorIndex).contains("&"))
+				{
+					if(!text.substring(text.substring(0,cursorIndex).lastIndexOf("&"),text.substring(0,cursorIndex).length()-1).contains(";"))
+					{
+						//if the ASCII after the cursor is a tab set the num to move cursor to 24
+						if(text.substring(text.substring(0,cursorIndex).lastIndexOf("&"),text.substring(0,cursorIndex).length()).equals("&emsp;"))
+						{
+							num = 24;
+						}
+						//otherwise set the num equal to the length of the ASCII string
+						else
+						{
+							num = text.substring(text.substring(0,cursorIndex).lastIndexOf("&"),text.substring(0,cursorIndex).length()-1).length()+1;
+						}
+					}
+				}
+			}
+			else if( text.substring(cursorIndex-4,cursorIndex).equals("<br>"))
+			{
+				num = 4;
+			}
+			cursorIndex -= num;
+		}
 	}
-	
-	public void copy (String text)
-	{
-		copied = text.substring(cursorIndex+1,text.length()-7);
+
+	public String addCursor(String text) {
+		return text.substring(0, cursorIndex) + "|" + text.substring(cursorIndex, text.length());
 	}
-	
-	public String paste (String text)
-	{
-		return text.substring(0,cursorIndex-1) + copied + text.substring(cursorIndex,text.length());
+
+	public void copy(String text) {
+		copied = text.substring(cursorIndex+1, text.length() - 7);
+	}
+
+	public String paste(String text) {
+		return text.substring(0, cursorIndex) + copied + text.substring(cursorIndex, text.length());
 	}
 
 }
