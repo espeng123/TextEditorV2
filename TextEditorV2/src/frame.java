@@ -29,15 +29,15 @@ public class frame {
 	String copied = "";
 
 	// Constructor
-	public frame(int xSize, int ySize, String text, String filename) {
+	public frame(int xSize, int ySize, String newText, String filename) {
 		Menu();
 		frame.setTitle(
 				"Text Editor - " + filename.substring((filename.lastIndexOf("/") + 1), filename.indexOf(".txt")));
 		windows++;
 		String previousText = label.getText();
 		previousText = previousText.substring(0, previousText.length() - 7);
-		if (text != null) {
-			previousText += text;
+		if (newText != null) {
+			previousText += newText;
 		}
 		label.setText(previousText + "|</html>");
 		prevSave = toPlainText(label.getText());
@@ -299,6 +299,12 @@ public class frame {
 		} else if (keyCode == 86 && command) {
 			previousText = paste(label.getText());
 		}
+		else if ((keyCode == 39 && command) || (keyCode == 37 && command)) {
+			if( !previousText.contains("<u><font color=\"#00ffff\">"))
+			{
+				textToAdd = "<u><font color=\"#00ffff\">";
+			}
+		}
 
 		else if (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) {
 			moveCursor(previousText, keyCode);
@@ -323,9 +329,24 @@ public class frame {
 		{
 			previousText = previousText.substring(0,cursorIndex) + textToAdd + previousText.substring(cursorIndex,previousText.length());
 		}
-		moveCursor(previousText.length() - label.getText().substring(0, label.getText().length() - 8).length());
+		
+		if(previousText.contains("<u><font color=\"#00ffff\">"))
+		{
+			if(!previousText.contains("</font></u>"))
+			{
+				int indexOfEndMark = previousText.indexOf("<u><font color=\"#00ffff\">") + 26;
+				previousText = previousText.substring(0,indexOfEndMark) + "</font></u>" + previousText.substring(indexOfEndMark,previousText.length());
+				cursorIndex += 1;
+			}
+		}
 
+		moveCursor(previousText.length() - label.getText().substring(0, label.getText().length() - 8).length());
 		previousText = addCursor(previousText);
+		if(previousText.contains("<u><font color=\"#00ffff\">"))
+		{
+			previousText = moveHighlight(previousText);
+		}
+	
 
 		previousText += "</html>";
 
@@ -606,9 +627,6 @@ public class frame {
 		int num = 1;
 		//Moving Right
 		if (keyCode == 39 && cursorIndex != text.length()) {
-			if(command)
-			{
-			}
 			//if the next character after the cursor is ASCII
 			if( text.substring(cursorIndex,text.length()).indexOf("&") == 0 )
 			{
@@ -669,6 +687,13 @@ public class frame {
 
 	public String paste(String text) {
 		return text.substring(0, cursorIndex) + copied + text.substring(cursorIndex, text.length());
+	}
+	
+	public String moveHighlight(String text)
+	{
+		text.replaceAll("</font></u>","");
+		text = text.substring(0,cursorIndex) + "</font></u>" + text.substring(cursorIndex,text.length());
+		return text;
 	}
 
 }
