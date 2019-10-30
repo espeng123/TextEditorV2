@@ -25,8 +25,10 @@ public class frame {
 	static int windows = 0;
 	// ArrayList of strings to be redone
 	Stack<String> undone = new Stack<String>();
-	int cursorIndex = 6;
+	int cursorIndex = 0;
 	String copied = "";
+	String text;
+	String cursorText;
 
 	// Constructor
 	public frame(int xSize, int ySize, String newText, String filename) {
@@ -34,12 +36,11 @@ public class frame {
 		frame.setTitle(
 				"Text Editor - " + filename.substring((filename.lastIndexOf("/") + 1), filename.indexOf(".txt")));
 		windows++;
-		String previousText = label.getText();
-		previousText = previousText.substring(0, previousText.length() - 7);
+		text = label.getText();
 		if (newText != null) {
-			previousText += newText;
+			text += newText;
 		}
-		label.setText(previousText + "|</html>");
+		update();
 		prevSave = toPlainText(label.getText());
 		this.filename = filename;
 
@@ -53,9 +54,7 @@ public class frame {
 		frame.setTitle(
 				"Text Editor - " + filename.substring((filename.lastIndexOf("/") + 1), filename.indexOf(".txt")));
 		windows++;
-		String previousText = label.getText();
-		previousText = previousText.substring(0, previousText.length() - 7);
-		label.setText(previousText + "|</html>");
+		update();
 		prevSave = toPlainText(label.getText());
 
 		listeners();
@@ -64,6 +63,17 @@ public class frame {
 	}
 
 	// Methods
+	
+	void update() {
+		if (text == null) {
+			text = "";
+			cursorText = "|";
+		}
+		else
+			cursorText = text.substring(0, cursorIndex) + "|"+ text.substring(cursorIndex);
+		label.setText("<html>"+cursorText+"</html>");
+	}
+	
 	public void formatStuff(int xSize, int ySize) {
 		// Setup the frame with size, background color, and close button
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -206,10 +216,8 @@ public class frame {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				String text = undo(label.getText());
-				text += "|</html>";
-				label.setText(text);
-				frame.repaint();
+				undo();
+				update();
 			}
 		});
 		JMenuItem redoMenuItem = new JMenuItem("Redo");
@@ -217,10 +225,8 @@ public class frame {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				String text = redo(label.getText());
-				text += "|</html>";
-				label.setText(text);
-				frame.repaint();
+				redo();
+				update();
 			}
 		});
 
@@ -231,36 +237,18 @@ public class frame {
 		menuBar.add(editMenu);
 		frame.setJMenuBar(menuBar);
 	}
+	
 
 	private void typeText(KeyEvent e) {
 
 		int keyCode = e.getKeyCode();
 		char keyTyped = e.getKeyChar();
 		String textToAdd = "";
-		String previousText = label.getText();
-		if (previousText.equals("<html></html>")) {
-			previousText = previousText.substring(0, previousText.length() - 7);
-		} else {
-			previousText = previousText.substring(0, previousText.length() - 7);
-			if(cursorIndex != previousText.length()-1)
-			{
-				previousText = previousText.substring(0,cursorIndex) + previousText.substring(cursorIndex+1,previousText.length());
-			}
-			else
-			{
-				previousText = previousText.substring(0,cursorIndex);
-			}
-		}
+		
+		
 		// Implements backspace
 		if (keyTyped == 8) {
-			if(cursorIndex == previousText.length()-1)
-			{
-				previousText = delete(previousText);
-			}
-			else
-			{
-				previousText = delete(previousText.substring(0,cursorIndex)) + previousText.substring(cursorIndex,previousText.length());
-			}
+			delete();
 			// If the space key has been pressed
 		} else if (keyTyped == 32) {
 			textToAdd = "&nbsp;";
@@ -290,24 +278,24 @@ public class frame {
 		}
 
 		else if (keyCode == 90 && command && shift) {
-			previousText = redo(label.getText());
+			redo();
 		} else if (keyCode == 90 && command) {
-			previousText = undo(label.getText());
+			undo();
 		} else if (keyCode == 67 && command) {
 			copy(label.getText());
 			System.out.println(copied);
 		} else if (keyCode == 86 && command) {
-			previousText = paste(label.getText());
+			text = paste(label.getText());
 		}
 		else if ((keyCode == 39 && command) || (keyCode == 37 && command)) {
-			if( !previousText.contains("<u><font color=\"#00ffff\">"))
+			if( !text.contains("<u><font color=\"#00ffff\">"))
 			{
 				textToAdd = "<u><font color=\"#00ffff\">";
 			}
 		}
 
 		else if (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) {
-			moveCursor(previousText, keyCode);
+			moveCursor(text, keyCode);
 		}
 
 		// No ? box when hitting shift, caps lock, command, fn, control, alt, all the
@@ -327,32 +315,26 @@ public class frame {
 		
 		if(!textToAdd.equals(""))
 		{
-			previousText = previousText.substring(0,cursorIndex) + textToAdd + previousText.substring(cursorIndex,previousText.length());
+			text = text.substring(0,cursorIndex) + textToAdd + text.substring(cursorIndex,text.length());
 		}
 		
-		if(previousText.contains("<u><font color=\"#00ffff\">"))
+		if(text.contains("<u><font color=\"#00ffff\">"))
 		{
-			if(!previousText.contains("</font></u>"))
+			if(!text.contains("</font></u>"))
 			{
-				int indexOfEndMark = previousText.indexOf("<u><font color=\"#00ffff\">") + 26;
-				previousText = previousText.substring(0,indexOfEndMark) + "</font></u>" + previousText.substring(indexOfEndMark,previousText.length());
+				int indexOfEndMark = text.indexOf("<u><font color=\"#00ffff\">") + 26;
+				text = text.substring(0,indexOfEndMark) + "</font></u>" + text.substring(indexOfEndMark,text.length());
 				cursorIndex += 1;
 			}
 		}
 
-		moveCursor(previousText.length() - label.getText().substring(0, label.getText().length() - 8).length());
-		previousText = addCursor(previousText);
-		if(previousText.contains("<u><font color=\"#00ffff\">"))
+		moveCursor();
+		if(text.contains("<u><font color=\"#00ffff\">"))
 		{
-			previousText = moveHighlight(previousText);
+			text = moveHighlight(text);
 		}
-	
-
-		previousText += "</html>";
-
-		label.setText(previousText);
+		update();
 		setSaveStatus();
-		frame.repaint();
 	}
 
 	// Save To File Function
@@ -471,8 +453,6 @@ public class frame {
 	}
 
 	private String toPlainText(String text) {
-		// Remove the html tags
-		text = text.substring(6, text.length() - 8);
 		// Replace “&nbsp;” with a “ “
 		if (text.contains("&nbsp;")) {
 			text = text.replaceAll("&nbsp;", " ");
@@ -532,44 +512,39 @@ public class frame {
 		return text;
 	}
 
-	private String delete(String previousText) {
+	private void delete() {
 		// Deleting spaces
-		if (previousText.contains("&nbsp;") && (previousText.substring(previousText.length() - 6).equals("&nbsp;"))) {
-			previousText = previousText.substring(0, previousText.length() - 6);
-		}
-		// Don't delete the HTML tag
-		else if (previousText.equals("<html>")) {
-			previousText = previousText;
+		if (text.contains("&nbsp;") && (text.substring(text.length() - 6).equals("&nbsp;"))) {
+			text = text.substring(0, text.length() - 6);
 		}
 		// Deleting tabs
-		else if (previousText.substring(previousText.length() - 6).equals("&emsp;")) {
-			previousText = previousText.substring(0, previousText.length() - 24);
+		else if (text.substring(text.length() - 6).equals("&emsp;")) {
+			text = text.substring(0, text.length() - 24);
 		}
 
 		// Deleting enters
-		else if (previousText.substring(previousText.length() - 4).equals("<br>")) {
-			previousText = previousText.substring(0, previousText.length() - 4);
+		else if (text.substring(text.length() - 4).equals("<br>")) {
+			text = text.substring(0, text.length() - 4);
 		}
 		// Deleting less than sign
-		else if (previousText.substring(previousText.length() - 4).equals("&lt;")) {
-			previousText = previousText.substring(0, previousText.length() - 4);
+		else if (text.substring(text.length() - 4).equals("&lt;")) {
+			text = text.substring(0, text.length() - 4);
 		}
 		// Deleting greater than sign
-		else if (previousText.substring(previousText.length() - 4).equals("&gt;")) {
-			previousText = previousText.substring(0, previousText.length() - 4);
+		else if (text.substring(text.length() - 4).equals("&gt;")) {
+			text = text.substring(0, text.length() - 4);
 		}
 
 		// Deleting &
-		else if (previousText.substring(previousText.length() - 5).equals("&amp;")) {
-			previousText = previousText.substring(0, previousText.length() - 5);
+		else if (text.substring(text.length() - 5).equals("&amp;")) {
+			text = text.substring(0, text.length() - 5);
 		}
 
 		// Deleting all other characters
 		else {
-			previousText = previousText.substring(0, previousText.length() - 1);
+			text = text.substring(0, text.length() - 1);
 		}
 
-		return previousText;
 	}
 
 	private boolean isSaved(String text) {
@@ -588,11 +563,9 @@ public class frame {
 		}
 	}
 
-	private String undo(String text) {
-		text = text.substring(0, text.length() - 8);
-		if (text.equals("<html>")) {
-			// DO NOTHING
-		} else {
+	private void undo() {
+
+
 			if (text.contains("&nbsp;")) {
 				undone.push(text.substring(text.lastIndexOf("&nbsp;"), text.length()));
 				text = text.substring(0, text.lastIndexOf("&nbsp;"));
@@ -603,24 +576,20 @@ public class frame {
 				undone.push(text.substring(text.lastIndexOf("<br>"), text.length()));
 				text = text.substring(0, text.lastIndexOf("<br>"));
 			} else {
-				text = text.substring(6, text.length());
 				undone.push(text);
-				text = "<html>";
-			}
+			
 		}
-		return text;
 	}
 
-	private String redo(String text) {
+	private void redo() {
 		if (undone.size() >= 1) {
 			text = text.substring(0, text.length() - 8);
 			text += undone.pop();
 		}
-		return text;
 	}
 
-	public void moveCursor(int num) {
-		cursorIndex += num;
+	public void moveCursor() {
+		cursorIndex += 1;
 	}
 
 	public void moveCursor(String text, int keyCode) {
@@ -677,9 +646,6 @@ public class frame {
 		}
 	}
 
-	public String addCursor(String text) {
-		return text.substring(0, cursorIndex) + "|" + text.substring(cursorIndex, text.length());
-	}
 
 	public void copy(String text) {
 		copied = text.substring(cursorIndex+1, text.length() - 7);
