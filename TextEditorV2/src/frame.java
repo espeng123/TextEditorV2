@@ -28,7 +28,6 @@ public class frame {
 	int cursorIndex = 0;
 	String copied = "";
 	String text;
-	String cursorText;
 
 	// Constructor
 	public frame(int xSize, int ySize, String newText, String filename) {
@@ -36,7 +35,7 @@ public class frame {
 		frame.setTitle(
 				"Text Editor - " + filename.substring((filename.lastIndexOf("/") + 1), filename.indexOf(".txt")));
 		windows++;
-		text = label.getText();
+		text = "";
 		if (newText != null) {
 			text += newText;
 		}
@@ -54,26 +53,30 @@ public class frame {
 		frame.setTitle(
 				"Text Editor - " + filename.substring((filename.lastIndexOf("/") + 1), filename.indexOf(".txt")));
 		windows++;
+		text = "";
 		update();
 		prevSave = toPlainText(label.getText());
 
 		listeners();
-
+		
 		formatStuff(xSize, ySize);
 	}
 
 	// Methods
-	
+
 	void update() {
-		if (text == null) {
-			text = "";
+		String cursorText;
+		if (text == "") {
 			cursorText = "|";
+		} else {
+			cursorText = text.substring(0, cursorIndex);
+			cursorText += "|";
+			cursorText += text.substring(cursorIndex);
+
 		}
-		else
-			cursorText = text.substring(0, cursorIndex) + "|"+ text.substring(cursorIndex);
-		label.setText("<html>"+cursorText+"</html>");
+		label.setText("<html>" + cursorText + "</html>");
 	}
-	
+
 	public void formatStuff(int xSize, int ySize) {
 		// Setup the frame with size, background color, and close button
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -84,8 +87,8 @@ public class frame {
 		// Intelligent way to do borders
 		JLabel label1 = new JLabel("<html> <br> <br></html>");
 		JLabel label2 = new JLabel(" ");
-		JLabel label3 = new JLabel("             ");
-		JLabel label4 = new JLabel("             ");
+		JLabel label3 = new JLabel("Â Â Â Â Â Â Â Â Â Â Â Â Â ");
+		JLabel label4 = new JLabel("Â Â Â Â Â Â Â Â Â Â Â Â Â ");
 
 		// Set up the location, size, alignment, font, and font color of the text box
 		label.setVerticalAlignment(JLabel.TOP);
@@ -237,15 +240,13 @@ public class frame {
 		menuBar.add(editMenu);
 		frame.setJMenuBar(menuBar);
 	}
-	
 
 	private void typeText(KeyEvent e) {
 
 		int keyCode = e.getKeyCode();
 		char keyTyped = e.getKeyChar();
 		String textToAdd = "";
-		
-		
+
 		// Implements backspace
 		if (keyTyped == 8) {
 			delete();
@@ -255,13 +256,13 @@ public class frame {
 			// If TAB was entered
 		} else if (keyCode == 9) {
 			textToAdd = "&emsp;&emsp;&emsp;&emsp;";
-			// IF they tried to type “<”
+			// IF they tried to type â€œ<â€�
 		} else if (keyCode == 44 && shift) {
 			textToAdd = "&lt;";
-			// IF they tried to type “>”
+			// IF they tried to type â€œ>â€�
 		} else if (keyCode == 46 && shift) {
 			textToAdd = "&gt;";
-			// IF they tried to type “&”
+			// IF they tried to type â€œ&â€�
 		} else if (keyCode == 55 && shift) {
 			textToAdd = "&amp;";
 			// IF they pressed enter or return
@@ -286,16 +287,14 @@ public class frame {
 			System.out.println(copied);
 		} else if (keyCode == 86 && command) {
 			text = paste(label.getText());
-		}
-		else if ((keyCode == 39 && command) || (keyCode == 37 && command)) {
-			if( !text.contains("<u><font color=\"#00ffff\">"))
-			{
+		} else if ((keyCode == 39 && command) || (keyCode == 37 && command)) {
+			if (!text.contains("<u><font color=\"#00ffff\">")) {
 				textToAdd = "<u><font color=\"#00ffff\">";
 			}
 		}
 
 		else if (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) {
-			moveCursor(text, keyCode);
+			moveCursor(keyCode);
 		}
 
 		// No ? box when hitting shift, caps lock, command, fn, control, alt, all the
@@ -312,29 +311,29 @@ public class frame {
 				textToAdd += keyTyped;
 			}
 		}
-		
-		if(!textToAdd.equals(""))
-		{
-			text = text.substring(0,cursorIndex) + textToAdd + text.substring(cursorIndex,text.length());
-		}
-		
-		if(text.contains("<u><font color=\"#00ffff\">"))
-		{
-			if(!text.contains("</font></u>"))
-			{
-				int indexOfEndMark = text.indexOf("<u><font color=\"#00ffff\">") + 26;
-				text = text.substring(0,indexOfEndMark) + "</font></u>" + text.substring(indexOfEndMark,text.length());
-				cursorIndex += 1;
-			}
-		}
 
-		moveCursor();
-		if(text.contains("<u><font color=\"#00ffff\">"))
-		{
-			text = moveHighlight(text);
-		}
+		add(textToAdd);
+		cursorIndex+= textToAdd.length();
+
+//		if (text.contains("<u><font color=\"#00ffff\">")) {
+//			if (!text.contains("</font></u>")) {
+//				int indexOfEndMark = text.indexOf("<u><font color=\"#00ffff\">") + 26;
+//				text = text.substring(0, indexOfEndMark) + "</font></u>"
+//						+ text.substring(indexOfEndMark, text.length());
+//				cursorIndex += 1;
+//			}
+//		}
+
+//		if (text.contains("<u><font color=\"#00ffff\">")) {
+//			text = moveHighlight(text);
+//		}
+		
 		update();
 		setSaveStatus();
+	}
+
+	void add(String s) {
+		text = text.substring(0, cursorIndex) + s + text.substring(cursorIndex);
 	}
 
 	// Save To File Function
@@ -453,27 +452,27 @@ public class frame {
 	}
 
 	private String toPlainText(String text) {
-		// Replace “&nbsp;” with a “ “
+		// Replace â€œ&nbsp;â€� with a â€œ â€œ
 		if (text.contains("&nbsp;")) {
 			text = text.replaceAll("&nbsp;", " ");
 		}
-		// Replace “&emsp;&emsp;&emsp;&emsp;” with a tab
+		// Replace â€œ&emsp;&emsp;&emsp;&emsp;â€� with a tab
 		if (text.contains("&emsp;&emsp;&emsp;&emsp;")) {
 			text = text.replaceAll("&emsp;&emsp;&emsp;&emsp;", "\t");
 		}
-		// Replace “&lt;” with a “<”
+		// Replace â€œ&lt;â€� with a â€œ<â€�
 		if (text.contains("&lt;")) {
 			text = text.replaceAll("&lt;", "<");
 		}
-		// Replace “&gt;” with a “>”
+		// Replace â€œ&gt;â€� with a â€œ>â€�
 		if (text.contains("&gt;")) {
 			text = text.replaceAll("&gt;", ">");
 		}
-		// Replace “&amp;” with a “&”
+		// Replace â€œ&amp;â€� with a â€œ&â€�
 		if (text.contains("&amp;")) {
 			text = text.replaceAll("&amp;", "&");
 		}
-		// Replace “<br>” with a enter
+		// Replace â€œ<br>â€� with a enter
 		if (text.contains("<br>")) {
 			text = text.replaceAll("<br>", "\n");
 		}
@@ -482,15 +481,15 @@ public class frame {
 	}
 
 	private String toHtml(String text) {
-		// Replace “&” with a “&amp;”
+		// Replace â€œ&â€� with a â€œ&amp;â€�
 		if (text.contains("&")) {
 			text = text.replaceAll("&", "&amp;");
 		}
-		// Replace " " with a “&nbsp;”
+		// Replace " " with a â€œ&nbsp;â€�
 		if (text.contains(" ")) {
 			text = text.replaceAll(" ", "&nbsp;");
 		}
-		// Replace tab with “&emsp;&emsp;&emsp;&emsp;”
+		// Replace tab with â€œ&emsp;&emsp;&emsp;&emsp;â€�
 		if (text.contains("\t")) {
 			text = text.replaceAll("\t", "&emsp;&emsp;&emsp;&emsp;");
 		}
@@ -498,7 +497,7 @@ public class frame {
 		if (text.contains("<")) {
 			text = text.replaceAll("<", "&lt;");
 		}
-		// Replace “>” with a “&gt;”
+		// Replace â€œ>â€� with a â€œ&gt;â€�
 		if (text.contains(">")) {
 			text = text.replaceAll(">", "&gt;");
 		}
@@ -513,36 +512,10 @@ public class frame {
 	}
 
 	private void delete() {
-		// Deleting spaces
-		if (text.contains("&nbsp;") && (text.substring(text.length() - 6).equals("&nbsp;"))) {
-			text = text.substring(0, text.length() - 6);
-		}
-		// Deleting tabs
-		else if (text.substring(text.length() - 6).equals("&emsp;")) {
-			text = text.substring(0, text.length() - 24);
-		}
-
-		// Deleting enters
-		else if (text.substring(text.length() - 4).equals("<br>")) {
-			text = text.substring(0, text.length() - 4);
-		}
-		// Deleting less than sign
-		else if (text.substring(text.length() - 4).equals("&lt;")) {
-			text = text.substring(0, text.length() - 4);
-		}
-		// Deleting greater than sign
-		else if (text.substring(text.length() - 4).equals("&gt;")) {
-			text = text.substring(0, text.length() - 4);
-		}
-
-		// Deleting &
-		else if (text.substring(text.length() - 5).equals("&amp;")) {
-			text = text.substring(0, text.length() - 5);
-		}
-
-		// Deleting all other characters
-		else {
-			text = text.substring(0, text.length() - 1);
+		if (text != "") {
+			String toRight = text.substring(cursorIndex);
+			cursorIndex -= leftCharLen();
+			text = text.substring(0, cursorIndex) + toRight;
 		}
 
 	}
@@ -565,19 +538,18 @@ public class frame {
 
 	private void undo() {
 
+		if (text.contains("&nbsp;")) {
+			undone.push(text.substring(text.lastIndexOf("&nbsp;"), text.length()));
+			text = text.substring(0, text.lastIndexOf("&nbsp;"));
+		} else if (text.contains("&emsp;")) {
+			undone.push(text.substring(text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"), text.length()));
+			text = text.substring(0, text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"));
+		} else if (text.contains("<br>")) {
+			undone.push(text.substring(text.lastIndexOf("<br>"), text.length()));
+			text = text.substring(0, text.lastIndexOf("<br>"));
+		} else {
+			undone.push(text);
 
-			if (text.contains("&nbsp;")) {
-				undone.push(text.substring(text.lastIndexOf("&nbsp;"), text.length()));
-				text = text.substring(0, text.lastIndexOf("&nbsp;"));
-			} else if (text.contains("&emsp;")) {
-				undone.push(text.substring(text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"), text.length()));
-				text = text.substring(0, text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"));
-			} else if (text.contains("<br>")) {
-				undone.push(text.substring(text.lastIndexOf("<br>"), text.length()));
-				text = text.substring(0, text.lastIndexOf("<br>"));
-			} else {
-				undone.push(text);
-			
 		}
 	}
 
@@ -588,78 +560,77 @@ public class frame {
 		}
 	}
 
-	public void moveCursor() {
-		cursorIndex += 1;
+
+	public void moveCursor(int keyCode) {
+		//if (text != "")
+			if (keyCode == 39) {
+				cursorIndex += rightCharLen();
+				// Moving Left
+			} else if (keyCode == 37) {
+				cursorIndex -= leftCharLen();
+			}
 	}
 
-	public void moveCursor(String text, int keyCode) {
+	int rightCharLen() {
 		int num = 1;
-		//Moving Right
-		if (keyCode == 39 && cursorIndex != text.length()) {
-			//if the next character after the cursor is ASCII
-			if( text.substring(cursorIndex,text.length()).indexOf("&") == 0 )
-			{
-				//if the ASCII after the cursor is a tab set the num to move cursor to 24
-				if( text.substring(cursorIndex,text.length()).substring(0,text.substring(cursorIndex,text.length()).indexOf(";")+1).equals("&emsp;"))
-				{
-					num = 24;
-				}
-				//otherwise set the num equal to the length of the ASCII string
-				else
-				{
-					num = text.substring(cursorIndex,text.length()).indexOf(";")+1;
-				}
+		if (cursorIndex == text.length())
+			num = 0;
+		// if &, character after the cursor is possibly ASCII
+		else if (text.substring(cursorIndex, cursorIndex+1).equals("&")) {
+			// is tab, 24
+			if (text.substring(cursorIndex).contains("&emsp;") && text.substring(cursorIndex, cursorIndex+6).equals("&emsp;")) {
+				num = 24;
 			}
-			else if( text.substring(cursorIndex,text.length()).indexOf("<br>") == 0)
-			{
-				num = 4;
+			// find end of possible ascii char
+			else if (text.substring(cursorIndex, cursorIndex+6).contains(";")){
+				int endASCII = cursorIndex + text.substring(cursorIndex, cursorIndex+8).indexOf(";");
+				num = endASCII - cursorIndex + 1;
 			}
-			cursorIndex += num;
-			//Moving Left
-		} else if (keyCode == 37 && cursorIndex != 6) {
-			//if the character before the cursor is a ;
-			if( text.substring(0,cursorIndex).lastIndexOf(";") == text.substring(0,cursorIndex).length()-1 )
-			{
-				//if it is a ; then make sure it is actually ASCII
-				if(text.substring(0,cursorIndex).contains("&"))
-				{
-					if(!text.substring(text.substring(0,cursorIndex).lastIndexOf("&"),text.substring(0,cursorIndex).length()-1).contains(";"))
-					{
-						//if the ASCII after the cursor is a tab set the num to move cursor to 24
-						if(text.substring(text.substring(0,cursorIndex).lastIndexOf("&"),text.substring(0,cursorIndex).length()).equals("&emsp;"))
-						{
-							num = 24;
-						}
-						//otherwise set the num equal to the length of the ASCII string
-						else
-						{
-							num = text.substring(text.substring(0,cursorIndex).lastIndexOf("&"),text.substring(0,cursorIndex).length()-1).length()+1;
-						}
-					}
-				}
-			}
-			else if( text.substring(cursorIndex-4,cursorIndex).equals("<br>"))
-			{
-				num = 4;
-			}
-			cursorIndex -= num;
+		} else if (text.substring(cursorIndex).contains("<br>") && text.substring(cursorIndex, cursorIndex+4).equals("<br>")) {
+			num = 4;
 		}
+		return num;
 	}
 
+	int leftCharLen() {
+		int num = 1;
+		if (cursorIndex == 0) {
+			num = 0;
+		}
+		// if ;, char before cursor is possibly ascii
+		else if (text.substring(cursorIndex - 1, cursorIndex).equals(";")) {
+			// check for &
+			if (text.substring(0, cursorIndex).contains("&")) {
+				System.out.println(text.substring(cursorIndex-6, cursorIndex));
+					// if the ASCII after the cursor is a tab set the num to move cursor to 24
+					if (cursorIndex >= 24 && text.substring(cursorIndex-6, cursorIndex).equals("&emsp;")) {
+						num = 24;
+					}
+					// otherwise set the num equal to the length of the ASCII string
+					else {
+						num = text.substring(text.substring(0, cursorIndex).lastIndexOf("&"), cursorIndex).length();
+					}
+				
+			}
+		} else if (cursorIndex >= 4 && text.substring(cursorIndex - 4, cursorIndex).equals("<br>")) {
+			num = 4;
+		}
+		return num;
+	}
 
 	public void copy(String text) {
-		copied = text.substring(cursorIndex+1, text.length() - 7);
+		copied = text.substring(cursorIndex + 1, text.length() - 7);
 	}
 
 	public String paste(String text) {
 		return text.substring(0, cursorIndex) + copied + text.substring(cursorIndex, text.length());
 	}
-	
-	public String moveHighlight(String text)
-	{
-		text.replaceAll("</font></u>","");
-		text = text.substring(0,cursorIndex) + "</font></u>" + text.substring(cursorIndex,text.length());
-		return text;
-	}
+
+//	public String moveHighlight(String text) {
+//		text.replaceAll("</font></u>", "");
+//		text = text.substring(0, cursorIndex) + "</font></u>" + text.substring(cursorIndex, text.length());
+//		return text;
+//	}
+
 
 }
