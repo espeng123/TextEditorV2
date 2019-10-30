@@ -8,16 +8,12 @@ import java.io.*;
 import java.util.Stack;
 
 public class frame {
-	// Variables
-	// Filename
 	String filename = "/Untitled.txt";
-	// JFrame for the GUI
 	JFrame frame = new JFrame("");
-	// Main label for the text box
 	JLabel label = new JLabel("<html></html>", JLabel.LEFT);
-	// Boolean for if shift is pressed
+	//if shift is pressed
 	static boolean shift = false;
-	// Boolean for if command is pressed
+	//if command is pressed
 	static boolean command = false;
 	// String of the previous save
 	String prevSave = "";
@@ -27,6 +23,7 @@ public class frame {
 	Stack<String> undone = new Stack<String>();
 	int cursorIndex = 0;
 	String copied = "";
+	
 	String text;
 
 	// Constructor
@@ -39,8 +36,9 @@ public class frame {
 		if (newText != null) {
 			text += newText;
 		}
+		cursorIndex = text.length();
 		update();
-		prevSave = toPlainText(label.getText());
+		prevSave = toPlainText(text);
 		this.filename = filename;
 
 		listeners();
@@ -55,7 +53,7 @@ public class frame {
 		windows++;
 		text = "";
 		update();
-		prevSave = toPlainText(label.getText());
+		prevSave = toPlainText(text);
 
 		listeners();
 		
@@ -65,19 +63,14 @@ public class frame {
 	// Methods
 
 	void update() {
-		String cursorText;
-		if (text == "") {
-			cursorText = "|";
-		} else {
-			cursorText = text.substring(0, cursorIndex);
-			cursorText += "|";
-			cursorText += text.substring(cursorIndex);
+		String displayText = text.substring(0, cursorIndex);
+		displayText += "|";
+		displayText += text.substring(cursorIndex);
 
-		}
-		label.setText("<html>" + cursorText + "</html>");
+		label.setText("<html>" + displayText + "</html>");
 	}
 
-	public void formatStuff(int xSize, int ySize) {
+	private void formatStuff(int xSize, int ySize) {
 		// Setup the frame with size, background color, and close button
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.setSize(xSize, ySize);
@@ -105,7 +98,7 @@ public class frame {
 		frame.setVisible(true);
 	}
 
-	public void listeners() {
+	private void listeners() {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -171,7 +164,7 @@ public class frame {
 		});
 	}
 
-	public void Menu() {
+	private void Menu() {
 		JMenuBar menuBar = new JMenuBar();
 		JMenu fileMenu = new JMenu("File");
 		JMenuItem newMenuItem = new JMenuItem("New");
@@ -362,7 +355,7 @@ public class frame {
 		} else {
 			moveOn = true;
 		}
-		String toSave = toPlainText(label.getText());
+		String toSave = toPlainText(text);
 
 		if (moveOn) {
 			// Create a buffered writer to save the file
@@ -439,7 +432,6 @@ public class frame {
 			}
 
 			text = toHtml(text);
-
 			new frame(800, 800, text, openFilename);
 		} else {
 			command = false;
@@ -561,17 +553,17 @@ public class frame {
 	}
 
 
-	public void moveCursor(int keyCode) {
-		//if (text != "")
-			if (keyCode == 39) {
+	private void moveCursor(int keyCode) {
+		//move right
+		if (keyCode == 39) {
 				cursorIndex += rightCharLen();
-				// Moving Left
-			} else if (keyCode == 37) {
-				cursorIndex -= leftCharLen();
-			}
+		// Moving Left
+		} else if (keyCode == 37) {
+			cursorIndex -= leftCharLen();
+		}
 	}
 
-	int rightCharLen() {
+	private int rightCharLen() {
 		int num = 1;
 		if (cursorIndex == text.length())
 			num = 0;
@@ -592,7 +584,7 @@ public class frame {
 		return num;
 	}
 
-	int leftCharLen() {
+	private int leftCharLen() {
 		int num = 1;
 		if (cursorIndex == 0) {
 			num = 0;
@@ -618,11 +610,11 @@ public class frame {
 		return num;
 	}
 
-	public void copy(String text) {
+	private void copy(String text) {
 		copied = text.substring(cursorIndex + 1, text.length() - 7);
 	}
 
-	public String paste(String text) {
+	private String paste(String text) {
 		return text.substring(0, cursorIndex) + copied + text.substring(cursorIndex, text.length());
 	}
 
