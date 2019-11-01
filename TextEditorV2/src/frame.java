@@ -80,8 +80,8 @@ public class frame {
 		// Intelligent way to do borders
 		JLabel label1 = new JLabel("<html> <br> <br></html>");
 		JLabel label2 = new JLabel(" ");
-		JLabel label3 = new JLabel("Â Â Â Â Â Â Â Â Â Â Â Â Â ");
-		JLabel label4 = new JLabel("Â Â Â Â Â Â Â Â Â Â Â Â Â ");
+		JLabel label3 = new JLabel("         ");
+		JLabel label4 = new JLabel("         ");
 
 		// Set up the location, size, alignment, font, and font color of the text box
 		label.setVerticalAlignment(JLabel.TOP);
@@ -102,7 +102,7 @@ public class frame {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				if (!isSaved(label.getText())) {
+				if (!isSaved(text)) {
 					int result = JOptionPane.showConfirmDialog(null,
 							"Your work is not saved. Do you wish to save it now?", "Confirm", JOptionPane.YES_NO_OPTION,
 							JOptionPane.QUESTION_MESSAGE);
@@ -444,6 +444,7 @@ public class frame {
 	}
 
 	private String toPlainText(String text) {
+		
 		// Replace â€œ&nbsp;â€� with a â€œ â€œ
 		if (text.contains("&nbsp;")) {
 			text = text.replaceAll("&nbsp;", " ");
@@ -509,7 +510,6 @@ public class frame {
 			cursorIndex -= leftCharLen();
 			text = text.substring(0, cursorIndex) + toRight;
 		}
-
 	}
 
 	private boolean isSaved(String text) {
@@ -520,11 +520,19 @@ public class frame {
 	}
 
 	private void setSaveStatus() {
-		if (!isSaved(label.getText()) && !(frame.getTitle().contains(" *"))) {
-			frame.setTitle(frame.getTitle() + " *");
+		if(isSaved(text))
+		{
+			if( frame.getTitle().contains(" *") )
+			{
+				frame.setTitle(frame.getTitle().substring(0, frame.getTitle().length() - 2));
+			}
 		}
-		if (isSaved(label.getText()) && frame.getTitle().equals(frame.getTitle() + " *")) {
-			frame.setTitle(frame.getTitle().substring(0, frame.getTitle().length() - 2));
+		else
+		{
+			if( !frame.getTitle().contains(" *") )
+			{
+				frame.setTitle(frame.getTitle() + " *");
+			}
 		}
 	}
 
