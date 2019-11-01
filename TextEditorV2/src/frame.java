@@ -105,7 +105,7 @@ public class frame {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				if (!isSaved(label.getText())) {
+				if (!isSaved(text)) {
 					int result = JOptionPane.showConfirmDialog(null,
 							"Your work is not saved. Do you wish to save it now?", "Confirm", JOptionPane.YES_NO_OPTION,
 							JOptionPane.QUESTION_MESSAGE);
@@ -447,6 +447,7 @@ public class frame {
 	}
 
 	private String toPlainText(String text) {
+		
 		// Replace â€œ&nbsp;â€� with a â€œ â€œ
 		if (text.contains("&nbsp;")) {
 			text = text.replaceAll("&nbsp;", " ");
@@ -522,35 +523,50 @@ public class frame {
 	}
 
 	private void setSaveStatus() {
-		if (!isSaved(label.getText()) && !(frame.getTitle().contains(" *"))) {
-			frame.setTitle(frame.getTitle() + " *");
+		if(isSaved(text))
+		{
+			if( frame.getTitle().contains(" *") )
+			{
+				frame.setTitle(frame.getTitle().substring(0, frame.getTitle().length() - 2));
+			}
 		}
-		if (isSaved(label.getText()) && frame.getTitle().equals(frame.getTitle() + " *")) {
-			frame.setTitle(frame.getTitle().substring(0, frame.getTitle().length() - 2));
+		else
+		{
+			if( !frame.getTitle().contains(" *") )
+			{
+				frame.setTitle(frame.getTitle() + " *");
+			}
 		}
 	}
 
 	private void undo() {
 
 		if (text.contains("&nbsp;")) {
+			cursorIndex = text.lastIndexOf("&nbsp;"); 
 			undone.push(text.substring(text.lastIndexOf("&nbsp;"), text.length()));
 			text = text.substring(0, text.lastIndexOf("&nbsp;"));
 		} else if (text.contains("&emsp;")) {
+			cursorIndex = text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;");
 			undone.push(text.substring(text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"), text.length()));
 			text = text.substring(0, text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"));
 		} else if (text.contains("<br>")) {
+			cursorIndex = text.lastIndexOf("<br>");
 			undone.push(text.substring(text.lastIndexOf("<br>"), text.length()));
 			text = text.substring(0, text.lastIndexOf("<br>"));
 		} else {
 			undone.push(text);
-
+			text = "";
+			cursorIndex = 0;
 		}
+		update();
 	}
 
 	private void redo() {
 		if (undone.size() >= 1) {
-			text = text.substring(0, text.length() - 8);
+			int prevTextLength = text.length();
 			text += undone.pop();
+			cursorIndex += (prevTextLength - text.length());
+			update();
 		}
 	}
 
