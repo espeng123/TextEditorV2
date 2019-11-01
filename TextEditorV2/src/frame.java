@@ -19,6 +19,9 @@ public class frame {
 	String prevSave = "";
 	// Number of windows
 	static int windows = 0;
+	
+	static String[] specialChars = { "&nbsp;", "&emsp;&emsp;&emsp;&emsp;", "&lt;", "&gt;", "&amp;", "<br>" };
+	
 	// ArrayList of strings to be redone
 	Stack<String> undone = new Stack<String>();
 	int cursorIndex = 0;
@@ -80,8 +83,8 @@ public class frame {
 		// Intelligent way to do borders
 		JLabel label1 = new JLabel("<html> <br> <br></html>");
 		JLabel label2 = new JLabel(" ");
-		JLabel label3 = new JLabel("Â Â Â Â Â Â Â Â Â Â Â Â Â ");
-		JLabel label4 = new JLabel("Â Â Â Â Â Â Â Â Â Â Â Â Â ");
+		JLabel label3 = new JLabel("             ");
+		JLabel label4 = new JLabel("             ");
 
 		// Set up the location, size, alignment, font, and font color of the text box
 		label.setVerticalAlignment(JLabel.TOP);
@@ -509,7 +512,6 @@ public class frame {
 			cursorIndex -= leftCharLen();
 			text = text.substring(0, cursorIndex) + toRight;
 		}
-
 	}
 
 	private boolean isSaved(String text) {
@@ -564,6 +566,7 @@ public class frame {
 	}
 
 	private int rightCharLen() {
+		/*
 		int num = 1;
 		if (cursorIndex == text.length())
 			num = 0;
@@ -581,7 +584,31 @@ public class frame {
 		} else if (text.substring(cursorIndex).contains("<br>") && text.substring(cursorIndex, cursorIndex+4).equals("<br>")) {
 			num = 4;
 		}
+		
+		*/
+		int num = 1;
+		if( cursorIndex == text.length() )
+		{
+			num = 0;
+		}
+		
+		String rightOfCursor = text.substring( cursorIndex );
+		
+		for( String s : specialChars )
+		{
+			if( rightOfCursor.length() >= s.length() )
+			{
+				if( rightOfCursor.substring(0, s.length() ).equals( s ))
+				{
+					num = s.length();
+				}
+						
+
+			}
+		}
+		
 		return num;
+		
 	}
 
 	private int leftCharLen() {
@@ -589,27 +616,25 @@ public class frame {
 		if (cursorIndex == 0) {
 			num = 0;
 		}
-		// if ;, char before cursor is possibly ascii
-		else if (text.substring(cursorIndex - 1, cursorIndex).equals(";")) {
-			// check for &
-			if (text.substring(0, cursorIndex).contains("&")) {
-				System.out.println(text.substring(cursorIndex-6, cursorIndex));
-					// if the ASCII after the cursor is a tab set the num to move cursor to 24
-					if (cursorIndex >= 24 && text.substring(cursorIndex-6, cursorIndex).equals("&emsp;")) {
-						num = 24;
-					}
-					// otherwise set the num equal to the length of the ASCII string
-					else {
-						num = text.substring(text.substring(0, cursorIndex).lastIndexOf("&"), cursorIndex).length();
-					}
-				
+		
+		String leftOfCursor = text.substring( 0, cursorIndex );
+		
+		for( String s : specialChars )
+		{
+			if( leftOfCursor.length() >= s.length() )
+			{
+				if( leftOfCursor.substring( cursorIndex-s.length(), cursorIndex ).equals( s ))
+				{
+					num = s.length();
+				}
+						
+
 			}
-		} else if (cursorIndex >= 4 && text.substring(cursorIndex - 4, cursorIndex).equals("<br>")) {
-			num = 4;
 		}
+		
 		return num;
 	}
-
+	
 	private void copy(String text) {
 		copied = text.substring(cursorIndex + 1, text.length() - 7);
 	}
