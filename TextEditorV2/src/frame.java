@@ -539,24 +539,31 @@ public class frame {
 	private void undo() {
 
 		if (text.contains("&nbsp;")) {
+			cursorIndex = text.lastIndexOf("&nbsp;"); 
 			undone.push(text.substring(text.lastIndexOf("&nbsp;"), text.length()));
 			text = text.substring(0, text.lastIndexOf("&nbsp;"));
 		} else if (text.contains("&emsp;")) {
+			cursorIndex = text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;");
 			undone.push(text.substring(text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"), text.length()));
 			text = text.substring(0, text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"));
 		} else if (text.contains("<br>")) {
+			cursorIndex = text.lastIndexOf("<br>");
 			undone.push(text.substring(text.lastIndexOf("<br>"), text.length()));
 			text = text.substring(0, text.lastIndexOf("<br>"));
 		} else {
 			undone.push(text);
-
+			text = "";
+			cursorIndex = 0;
 		}
+		update();
 	}
 
 	private void redo() {
 		if (undone.size() >= 1) {
-			text = text.substring(0, text.length() - 8);
+			int prevTextLength = text.length();
 			text += undone.pop();
+			cursorIndex += (prevTextLength - text.length());
+			update();
 		}
 	}
 
