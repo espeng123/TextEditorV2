@@ -6,27 +6,34 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.Stack;
+import java.awt.datatransfer.StringSelection;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
 
 public class frame {
 	String filename = "/Untitled.txt";
 	JFrame frame = new JFrame("");
 	JLabel label = new JLabel("<html></html>", JLabel.LEFT);
-	//if shift is pressed
+	// if shift is pressed
 	static boolean shift = false;
-	//if command is pressed
+	// if command is pressed
 	static boolean command = false;
 	// String of the previous save
 	String prevSave = "";
 	// Number of windows
 	static int windows = 0;
+	boolean selection;
+	boolean inFrame;
 	
+
 	static String[] specialChars = { "&nbsp;", "&emsp;&emsp;&emsp;&emsp;", "&lt;", "&gt;", "&amp;", "<br>" };
-	
+	static String[] undoSpecialChars = { "&nbsp;", "&emsp;&emsp;&emsp;&emsp;", "<br>" };
+
 	// ArrayList of strings to be redone
 	Stack<String> undone = new Stack<String>();
 	int cursorIndex = 0;
 	String copied = "";
-	
+
 	String text;
 
 	// Constructor
@@ -59,7 +66,7 @@ public class frame {
 		prevSave = toPlainText(text);
 
 		listeners();
-		
+
 		formatStuff(xSize, ySize);
 	}
 
@@ -165,6 +172,39 @@ public class frame {
 				typeText(e);
 			}
 		});
+		frame.addMouseListener(new MouseListener() {
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				// TODO Auto-generated method stub
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+				getLineNumber(e);
+				getCharNumber(e);
+				System.out.println("(" + e.getX() + "," + e.getY() + ")");
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				// TODO Auto-generated method stub
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				// TODO Auto-generated method stub
+				inFrame = true;
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
+				inFrame = false;
+			}
+		});
+
 	}
 
 	private void Menu() {
@@ -228,9 +268,39 @@ public class frame {
 				update();
 			}
 		});
+		JMenuItem copyMenuItem = new JMenuItem("Copy");
+		copyMenuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				copy();
+				update();
+			}
+		});
+		JMenuItem pasteMenuItem = new JMenuItem("Paste");
+		pasteMenuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				paste();
+				update();
+			}
+		});
+		JMenuItem cutMenuItem = new JMenuItem("Cut");
+		cutMenuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				cut();
+				update();
+			}
+		});
 
 		editMenu.add(undoMenuItem);
 		editMenu.add(redoMenuItem);
+		editMenu.add(copyMenuItem);
+		editMenu.add(pasteMenuItem);
+		editMenu.add(cutMenuItem);
 
 		menuBar.add(fileMenu);
 		menuBar.add(editMenu);
@@ -242,6 +312,11 @@ public class frame {
 		int keyCode = e.getKeyCode();
 		char keyTyped = e.getKeyChar();
 		String textToAdd = "";
+		if (text.contains("<u><font color=\"#00ffff\">")) {
+			selection = true;
+		} else {
+			selection = false;
+		}
 
 		// Implements backspace
 		if (keyTyped == 8) {
@@ -279,18 +354,29 @@ public class frame {
 		} else if (keyCode == 90 && command) {
 			undo();
 		} else if (keyCode == 67 && command) {
-			copy(label.getText());
-			System.out.println(copied);
+			copy();
 		} else if (keyCode == 86 && command) {
-			text = paste(label.getText());
-		} else if ((keyCode == 39 && command) || (keyCode == 37 && command)) {
-			if (!text.contains("<u><font color=\"#00ffff\">")) {
+			paste();
+		} else if (keyCode == 88 && command) {
+			cut();
+		} else if (keyCode == 192 && command) {
+			if (!selection) {
 				textToAdd = "<u><font color=\"#00ffff\">";
+				selection = true;
+			} else {
+				text = text.replaceAll("<u><font color=\"#00ffff\">", "");
+				cursorIndex = text.indexOf("</font></u>");
+				text = text.replaceAll("</font></u>", "");
+				selection = false;
 			}
 		}
 
 		else if (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) {
-			moveCursor(keyCode);
+			if (selection) {
+				moveHighlight(keyCode);
+			} else {
+				moveCursor(keyCode);
+			}
 		}
 
 		// No ? box when hitting shift, caps lock, command, fn, control, alt, all the
@@ -298,7 +384,7 @@ public class frame {
 		else if (keyCode != 16 && keyCode != 20 && keyCode != 157 && keyCode != 0 && keyCode != 17 && keyCode != 18
 				&& keyCode != 65406 && keyCode != 27) {
 			undone.clear();
-			if (keyCode == 44 || keyCode == 46 || keyCode == 55) {
+			if (keyCode == 44 || keyCode == 46 || keyCode == 55 || keyCode == 192) {
 				if (!shift && !command) {
 					textToAdd += keyTyped;
 
@@ -309,21 +395,17 @@ public class frame {
 		}
 
 		add(textToAdd);
-		cursorIndex+= textToAdd.length();
+		cursorIndex += textToAdd.length();
 
-//		if (text.contains("<u><font color=\"#00ffff\">")) {
-//			if (!text.contains("</font></u>")) {
-//				int indexOfEndMark = text.indexOf("<u><font color=\"#00ffff\">") + 26;
-//				text = text.substring(0, indexOfEndMark) + "</font></u>"
-//						+ text.substring(indexOfEndMark, text.length());
-//				cursorIndex += 1;
-//			}
-//		}
+		if (selection) {
+			if (!text.contains("</font></u>")) {
+				int indexOfEndMark = text.indexOf("<u><font color=\"#00ffff\">") + 26;
+				text = text.substring(0, indexOfEndMark) + "</font></u>"
+						+ text.substring(indexOfEndMark, text.length());
+				cursorIndex += 12;
+			}
+		}
 
-//		if (text.contains("<u><font color=\"#00ffff\">")) {
-//			text = moveHighlight(text);
-//		}
-		
 		update();
 		setSaveStatus();
 	}
@@ -447,7 +529,7 @@ public class frame {
 	}
 
 	private String toPlainText(String text) {
-		
+
 		// Replace â€œ&nbsp;â€� with a â€œ â€œ
 		if (text.contains("&nbsp;")) {
 			text = text.replaceAll("&nbsp;", " ");
@@ -471,6 +553,11 @@ public class frame {
 		// Replace â€œ<br>â€� with a enter
 		if (text.contains("<br>")) {
 			text = text.replaceAll("<br>", "\n");
+		}
+
+		if (text.contains("<u><font color=\"#00ffff\">")) {
+			text = text.replace("<u><font color=\"#00ffff\">", "");
+			text = text.replace("</font></u>", "");
 		}
 
 		return text;
@@ -508,10 +595,18 @@ public class frame {
 	}
 
 	private void delete() {
-		if (text != "") {
-			String toRight = text.substring(cursorIndex);
-			cursorIndex -= leftCharLen();
-			text = text.substring(0, cursorIndex) + toRight;
+		if (!selection) {
+			if (text != "") {
+				String toRight = text.substring(cursorIndex);
+				cursorIndex -= leftCharLen();
+				text = text.substring(0, cursorIndex) + toRight;
+			}
+		} else {
+			int start = text.indexOf("<u><font color=\"#00ffff\">");
+			int end = text.indexOf("</font></u>") + 11;
+			text = text.substring(0, start) + text.substring(end, text.length());
+			cursorIndex = start;
+			selection = false;
 		}
 	}
 
@@ -523,108 +618,74 @@ public class frame {
 	}
 
 	private void setSaveStatus() {
-		if(isSaved(text))
-		{
-			if( frame.getTitle().contains(" *") )
-			{
+		if (isSaved(text)) {
+			if (frame.getTitle().contains(" *")) {
 				frame.setTitle(frame.getTitle().substring(0, frame.getTitle().length() - 2));
 			}
-		}
-		else
-		{
-			if( !frame.getTitle().contains(" *") )
-			{
+		} else {
+			if (!frame.getTitle().contains(" *")) {
 				frame.setTitle(frame.getTitle() + " *");
 			}
 		}
 	}
 
 	private void undo() {
-
-		if (text.contains("&nbsp;")) {
-			cursorIndex = text.lastIndexOf("&nbsp;"); 
-			undone.push(text.substring(text.lastIndexOf("&nbsp;"), text.length()));
-			text = text.substring(0, text.lastIndexOf("&nbsp;"));
-		} else if (text.contains("&emsp;")) {
-			cursorIndex = text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;");
-			undone.push(text.substring(text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"), text.length()));
-			text = text.substring(0, text.lastIndexOf("&emsp;&emsp;&emsp;&emsp;"));
-		} else if (text.contains("<br>")) {
-			cursorIndex = text.lastIndexOf("<br>");
-			undone.push(text.substring(text.lastIndexOf("<br>"), text.length()));
-			text = text.substring(0, text.lastIndexOf("<br>"));
-		} else {
-			undone.push(text);
-			text = "";
-			cursorIndex = 0;
+		if (!text.equals("")) {
+			int index = 0;
+			String textBeforeCursor = text.substring(0, cursorIndex);
+			for (String s : undoSpecialChars) {
+				if (textBeforeCursor.contains(s)) {
+					if (textBeforeCursor.lastIndexOf(s) > index) {
+						index = textBeforeCursor.lastIndexOf(s);
+					}
+				}
+			}
+			int before = text.length();
+			undone.push(textBeforeCursor.substring(index, textBeforeCursor.length()));
+			textBeforeCursor = textBeforeCursor.substring(0, index);
+			text = (textBeforeCursor + text.substring(cursorIndex, text.length()));
+			cursorIndex -= (before - text.length());
 		}
-		update();
 	}
 
 	private void redo() {
-		if (undone.size() >= 1) {
-			int prevTextLength = text.length();
-			text += undone.pop();
-			cursorIndex += (prevTextLength - text.length());
-			update();
+		if (undone.size() > 0) {
+			String toAdd = undone.pop();
+			text += toAdd;
+			cursorIndex += toAdd.length();
 		}
+
 	}
 
-
 	private void moveCursor(int keyCode) {
-		//move right
+		// move right
 		if (keyCode == 39) {
-				cursorIndex += rightCharLen();
-		// Moving Left
+			cursorIndex += rightCharLen();
+			// Moving Left
 		} else if (keyCode == 37) {
 			cursorIndex -= leftCharLen();
 		}
 	}
 
 	private int rightCharLen() {
-		/*
 		int num = 1;
-		if (cursorIndex == text.length())
-			num = 0;
-		// if &, character after the cursor is possibly ASCII
-		else if (text.substring(cursorIndex, cursorIndex+1).equals("&")) {
-			// is tab, 24
-			if (text.substring(cursorIndex).contains("&emsp;") && text.substring(cursorIndex, cursorIndex+6).equals("&emsp;")) {
-				num = 24;
-			}
-			// find end of possible ascii char
-			else if (text.substring(cursorIndex, cursorIndex+6).contains(";")){
-				int endASCII = cursorIndex + text.substring(cursorIndex, cursorIndex+8).indexOf(";");
-				num = endASCII - cursorIndex + 1;
-			}
-		} else if (text.substring(cursorIndex).contains("<br>") && text.substring(cursorIndex, cursorIndex+4).equals("<br>")) {
-			num = 4;
-		}
-		
-		*/
-		int num = 1;
-		if( cursorIndex == text.length() )
-		{
+		if (cursorIndex == text.length()) {
 			num = 0;
 		}
-		
-		String rightOfCursor = text.substring( cursorIndex );
-		
-		for( String s : specialChars )
-		{
-			if( rightOfCursor.length() >= s.length() )
-			{
-				if( rightOfCursor.substring(0, s.length() ).equals( s ))
-				{
+
+		String rightOfCursor = text.substring(cursorIndex);
+
+		for (String s : specialChars) {
+			if (rightOfCursor.length() >= s.length()) {
+				if (rightOfCursor.substring(0, s.length()).equals(s)) {
 					num = s.length();
 				}
-						
 
 			}
 		}
-		
+
 		return num;
-		
+
 	}
 
 	private int leftCharLen() {
@@ -632,38 +693,99 @@ public class frame {
 		if (cursorIndex == 0) {
 			num = 0;
 		}
-		
-		String leftOfCursor = text.substring( 0, cursorIndex );
-		
-		for( String s : specialChars )
-		{
-			if( leftOfCursor.length() >= s.length() )
-			{
-				if( leftOfCursor.substring( cursorIndex-s.length(), cursorIndex ).equals( s ))
-				{
+
+		String leftOfCursor = text.substring(0, cursorIndex);
+
+		for (String s : specialChars) {
+			if (leftOfCursor.length() >= s.length()) {
+				if (leftOfCursor.substring(cursorIndex - s.length(), cursorIndex).equals(s)) {
 					num = s.length();
 				}
-						
 
 			}
 		}
-		
+
 		return num;
 	}
+
+	private void copy() {
+		if (text.contains("<u><font color=\"#00ffff\">")) {
+			copied = text.substring(text.indexOf("<u><font color=\"#00ffff\">") + 25, text.indexOf("</font></u>"));
+			StringSelection stringSelection = new StringSelection(toPlainText(copied));
+			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			clipboard.setContents(stringSelection, null);
+		}
+	}
+
+	private void paste() {
+		text = text.substring(0, cursorIndex) + copied + text.substring(cursorIndex, text.length());
+		cursorIndex += copied.length();
+	}
+
+	private void cut() {
+		if (text.contains("<u><font color=\"#00ffff\">")) {
+			copied = text.substring(text.indexOf("<u><font color=\"#00ffff\">") + 25, text.indexOf("</font></u>"));
+			StringSelection stringSelection = new StringSelection(toPlainText(copied));
+			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			clipboard.setContents(stringSelection, null);
+			text = text.replace(copied, "");
+			text = text.replace(copied, "");
+			text = text.replace("<u><font color=\"#00ffff\">", "");
+			cursorIndex = text.indexOf("</font></u>");
+			text = text.replace("</font></u>", "");
+		}
+	}
+
+	private void moveHighlight(int keyCode) {
+		if (keyCode == 39) {
+			if (cursorIndex != text.length()) {
+				int index = text.indexOf("</font></u>");
+				text = text.substring(0, index) + text.substring(index + 11, text.length());
+				cursorIndex -= 11;
+				cursorIndex += rightCharLen();
+				text = text.substring(0, cursorIndex) + "</font></u>" + text.substring(cursorIndex, text.length());
+				cursorIndex += 11;
+			}
+		} else if (keyCode == 37) {
+			if (cursorIndex >= text.indexOf("<u><font color=\"#00ffff\">") + 37) {
+				int index = text.indexOf("</font></u>");
+				text = text.substring(0, index) + text.substring(index + 11, text.length());
+				cursorIndex -= 11;
+				cursorIndex -= leftCharLen();
+				text = text.substring(0, cursorIndex) + "</font></u>" + text.substring(cursorIndex, text.length());
+				cursorIndex += 11;
+			}
+		}
+	}
 	
-	private void copy(String text) {
-		copied = text.substring(cursorIndex + 1, text.length() - 7);
+	private void getLineNumber( MouseEvent e)
+	{
+		if( inFrame )
+		{
+			int y = e.getY();
+			int mousLinePos = y - 78;
+			int line = 1;
+			while( mousLinePos > line*15 )
+			{
+				line++;
+			}
+			System.out.println("ON LINE: " + line);
+		}
 	}
-
-	private String paste(String text) {
-		return text.substring(0, cursorIndex) + copied + text.substring(cursorIndex, text.length());
+	
+	private void getCharNumber( MouseEvent e)
+	{
+		if( inFrame )
+		{
+			int x = e.getX();
+			int mousLinePos = x - 50;
+			int charNum = 1;
+			while( mousLinePos > charNum*7 )
+			{
+				charNum++;
+			}
+			System.out.println("ON CHAR: " + charNum);
+		}
 	}
-
-//	public String moveHighlight(String text) {
-//		text.replaceAll("</font></u>", "");
-//		text = text.substring(0, cursorIndex) + "</font></u>" + text.substring(cursorIndex, text.length());
-//		return text;
-//	}
-
 
 }
