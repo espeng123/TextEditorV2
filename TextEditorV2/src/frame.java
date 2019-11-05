@@ -24,6 +24,7 @@ public class frame {
 	static int windows = 0;
 	boolean selection;
 	boolean inFrame;
+	int numOfLines = 1;
 	
 
 	static String[] specialChars = { "&nbsp;", "&emsp;&emsp;&emsp;&emsp;", "&lt;", "&gt;", "&amp;", "<br>" };
@@ -54,6 +55,8 @@ public class frame {
 		listeners();
 
 		formatStuff(xSize, ySize);
+		
+		numOfLines = countNumOfLines();
 	}
 
 	public frame(int xSize, int ySize) {
@@ -182,8 +185,7 @@ public class frame {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				// TODO Auto-generated method stub
-				getLineNumber(e);
-				getCharNumber(e);
+				setCursorOnClick(getLineNumber(e),getCharNumber(e));
 				System.out.println("(" + e.getX() + "," + e.getY() + ")");
 			}
 
@@ -339,6 +341,7 @@ public class frame {
 			// IF they pressed enter or return
 		} else if (keyTyped == 10) {
 			textToAdd = "<br>";
+			numOfLines++;
 			// Implements saving through command + s
 		} else if (keyCode == 83 && command) {
 			save();
@@ -500,6 +503,7 @@ public class frame {
 				currentLine = br.readLine();
 				while (currentLine != null) {
 					text += currentLine + "<br>";
+					numOfLines++;
 					currentLine = br.readLine();
 				}
 			} catch (IOException e) {
@@ -758,34 +762,94 @@ public class frame {
 		}
 	}
 	
-	private void getLineNumber( MouseEvent e)
+	private int getLineNumber( MouseEvent e)
 	{
 		if( inFrame )
 		{
 			int y = e.getY();
 			int mousLinePos = y - 78;
-			int line = 1;
+			int line;
+			if( mousLinePos > 0 )
+			{
+				line = 1;
+			}
+			else
+			{
+				return -1;
+			}
 			while( mousLinePos > line*15 )
 			{
 				line++;
 			}
-			System.out.println("ON LINE: " + line);
+			return line-1;
 		}
+		return -1;
 	}
 	
-	private void getCharNumber( MouseEvent e)
+	private int getCharNumber( MouseEvent e)
 	{
 		if( inFrame )
 		{
 			int x = e.getX();
 			int mousLinePos = x - 50;
-			int charNum = 1;
+			int charNum;
+			if( mousLinePos > 0 )
+			{
+				charNum = 1;
+			}
+			else
+			{
+				return -1;
+			}
 			while( mousLinePos > charNum*7 )
 			{
 				charNum++;
 			}
-			System.out.println("ON CHAR: " + charNum);
+			return charNum;
 		}
+		return -1;
+	}
+	
+	private void setCursorOnClick(int line, int charNum)
+	{
+		if( line < numOfLines )
+		{
+			System.out.println("Valid Line: " + line);
+			String lineText = getLine(line);
+			System.out.println("Line: " + lineText);
+			if(charNum <= lineText.length())
+			{
+				System.out.println("Valid Char: " + charNum);
+			}
+		}
+	}
+	
+	private int countNumOfLines()  
+	{ 
+		String toDestroy = text;
+		int count = 0;
+		while(toDestroy.contains("<br>"))
+		{
+			toDestroy = toDestroy.substring(toDestroy.indexOf("<br>")+4,toDestroy.length());
+			count ++;
+		}
+	  
+	    return count; 
+	} 
+	
+	private String getLine(int num)
+	{
+		String line = text;
+		while(num > 0)
+		{
+			line = line.substring(line.indexOf("<br>")+4,line.length());
+			num--;
+		}
+		if(line.contains("<br>"))
+		{
+			line = line.substring(0,line.indexOf("<br>"));
+		}
+		return line;
 	}
 
 }
