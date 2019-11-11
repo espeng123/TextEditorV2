@@ -7,8 +7,10 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.Stack;
 import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
 
 public class frame {
 	String filename = "/Untitled.txt";
@@ -25,15 +27,18 @@ public class frame {
 	boolean selection;
 	boolean inFrame;
 	int numOfLines = 1;
+	int mouseXStart;
+	int mouseYStart;
+	boolean mousePressed = false;
 	
 
 	static String[] specialChars = { "&nbsp;", "&emsp;&emsp;&emsp;&emsp;", "&lt;", "&gt;", "&amp;", "<br>" };
+	static String[] specialCharsV2 = { "&nbsp;", "&emsp;", "&lt;", "&gt;", "&amp;" };
 	static String[] undoSpecialChars = { "&nbsp;", "&emsp;&emsp;&emsp;&emsp;", "<br>" };
 
 	// ArrayList of strings to be redone
 	Stack<String> undone = new Stack<String>();
 	int cursorIndex = 0;
-	String copied = "";
 
 	String text;
 
@@ -180,19 +185,21 @@ public class frame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				// TODO Auto-generated method stub
+				if (e.getButton() == MouseEvent.BUTTON1) {
+					setCursorOnClick(getLineNumber(e),getCharNumber(e));
+				}
 			}
 
 			@Override
 			public void mousePressed(MouseEvent e) {
 				// TODO Auto-generated method stub
-				setCursorOnClick(getLineNumber(e),getCharNumber(e));
-				System.out.println("(" + e.getX() + "," + e.getY() + ")");
 			}
 
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				// TODO Auto-generated method stub
+				//mousePressed = false;
 			}
+			
 
 			@Override
 			public void mouseEntered(MouseEvent e) {
@@ -206,6 +213,14 @@ public class frame {
 				inFrame = false;
 			}
 		});
+		
+		frame.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+            	
+                //mouseSelection(e);
+            }
+        });
 
 	}
 
@@ -691,6 +706,27 @@ public class frame {
 		return num;
 
 	}
+	
+	private int nextCharLen() {
+		int num = 1;
+		if (cursorIndex == text.length()) {
+			num = 0;
+		}
+
+		String rightOfCursor = text.substring(cursorIndex);
+
+		for (String s : specialCharsV2) {
+			if (rightOfCursor.length() >= s.length()) {
+				if (rightOfCursor.substring(0, s.length()).equals(s)) {
+					num = s.length();
+				}
+
+			}
+		}
+
+		return num;
+
+	}
 
 	private int leftCharLen() {
 		int num = 1;
@@ -714,21 +750,32 @@ public class frame {
 
 	private void copy() {
 		if (text.contains("<u><font color=\"#00ffff\">")) {
-			copied = text.substring(text.indexOf("<u><font color=\"#00ffff\">") + 25, text.indexOf("</font></u>"));
+			String copied = text.substring(text.indexOf("<u><font color=\"#00ffff\">") + 25, text.indexOf("</font></u>"));
 			StringSelection stringSelection = new StringSelection(toPlainText(copied));
 			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 			clipboard.setContents(stringSelection, null);
 		}
 	}
 
-	private void paste() {
+	private void paste(){
+		Clipboard c=Toolkit.getDefaultToolkit().getSystemClipboard();
+		String copied = "";
+		try {
+			copied = (String) c.getData(DataFlavor.stringFlavor);
+		} catch (UnsupportedFlavorException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		text = text.substring(0, cursorIndex) + copied + text.substring(cursorIndex, text.length());
 		cursorIndex += copied.length();
 	}
 
 	private void cut() {
 		if (text.contains("<u><font color=\"#00ffff\">")) {
-			copied = text.substring(text.indexOf("<u><font color=\"#00ffff\">") + 25, text.indexOf("</font></u>"));
+			String copied = text.substring(text.indexOf("<u><font color=\"#00ffff\">") + 25, text.indexOf("</font></u>"));
 			StringSelection stringSelection = new StringSelection(toPlainText(copied));
 			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 			clipboard.setContents(stringSelection, null);
@@ -812,16 +859,82 @@ public class frame {
 	
 	private void setCursorOnClick(int line, int charNum)
 	{
-		if( line < numOfLines )
+		cursorIndex = getLocation(line,charNum);
+		update();
+	}
+	
+	private int getDistToChar(int charNum, String lineText)
+	{
+		int num = 0;
+		//char[] chars = lineText.toCharArray();
+		if(!lineText.contains("&"))
 		{
-			System.out.println("Valid Line: " + line);
-			String lineText = getLine(line);
-			System.out.println("Line: " + lineText);
-			if(charNum <= lineText.length())
+			num = lineText.length();
+		}
+		else
+		{
+			int numOfExtra = 0;
+			//lineText = lineText.substring(0,lineText.indexOf("&"));
+			for(String s: specialChars)
 			{
-				System.out.println("Valid Char: " + charNum);
+				if(lineText.contains(s))
+				{
+					numOfExtra += s.length();
+				}
+			}
+			num+=numOfExtra;
+		}
+		return num;
+	}
+	
+	private int getLocation(int line, int charNum)
+	{
+		int previousCursorPos = cursorIndex;
+		int num = 0;
+		if( line >= 0)
+		{
+			if( line < numOfLines )
+			{
+				String lineText = getLine(line);
+				if(charNum <= lineText.length()+1 && charNum>0)
+				{
+					//charNum --;
+					cursorIndex = getLengthTo(line);
+					//num += getDistToChar(charNum, lineText);
+					for(int i = 0; i < charNum-1; i++)
+					{
+						cursorIndex += nextCharLen();
+					}
+					num = cursorIndex;
+					cursorIndex = previousCursorPos;
+				}
+				else if(charNum == -1)
+				{
+					num = getLengthTo(line);
+				}
+				else
+				{
+					num = getLengthTo(line);
+					num += lineText.length();
+				}
 			}
 		}
+		return num;
+	}
+	
+	private void mouseSelection(MouseEvent e)
+	{
+		int location = getLocation(getLineNumber(e),getCharNumber(e));
+		if(location >= cursorIndex && text.contains("<u><font color=\"#00ffff\">"))
+		{
+			setCursorOnClick(getLineNumber(e),getCharNumber(e));
+		}
+		else if(!text.contains("<u><font color=\"#00ffff\">"))
+		{
+			setCursorOnClick(getLineNumber(e),getCharNumber(e));
+			text = text.substring(0,cursorIndex) + "<u><font color=\"#00ffff\">" + text.substring(cursorIndex,text.length());
+		}
+		update();
 	}
 	
 	private int countNumOfLines()  
@@ -850,6 +963,18 @@ public class frame {
 			line = line.substring(0,line.indexOf("<br>"));
 		}
 		return line;
+	}
+	
+	private int getLengthTo(int num)
+	{
+		int length = 0;
+		String toDestroy = text;
+		for( int i = 0; i < num; i++)
+		{
+			length += toDestroy.substring(0,toDestroy.indexOf("<br>")+4).length();
+			toDestroy = toDestroy.substring(toDestroy.indexOf("<br>")+4,toDestroy.length());
+		}
+		return length;
 	}
 
 }
