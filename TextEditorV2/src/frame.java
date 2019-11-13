@@ -863,30 +863,6 @@ public class frame {
 		update();
 	}
 	
-	private int getDistToChar(int charNum, String lineText)
-	{
-		int num = 0;
-		//char[] chars = lineText.toCharArray();
-		if(!lineText.contains("&"))
-		{
-			num = lineText.length();
-		}
-		else
-		{
-			int numOfExtra = 0;
-			//lineText = lineText.substring(0,lineText.indexOf("&"));
-			for(String s: specialChars)
-			{
-				if(lineText.contains(s))
-				{
-					numOfExtra += s.length();
-				}
-			}
-			num+=numOfExtra;
-		}
-		return num;
-	}
-	
 	private int getLocation(int line, int charNum)
 	{
 		int previousCursorPos = cursorIndex;
@@ -898,9 +874,7 @@ public class frame {
 				String lineText = getLine(line);
 				if(charNum <= lineText.length()+1 && charNum>0)
 				{
-					//charNum --;
 					cursorIndex = getLengthTo(line);
-					//num += getDistToChar(charNum, lineText);
 					for(int i = 0; i < charNum-1; i++)
 					{
 						cursorIndex += nextCharLen();
