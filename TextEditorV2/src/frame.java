@@ -30,10 +30,10 @@ public class frame {
 	int mouseXStart;
 	int mouseYStart;
 	boolean mousePressed = false;
-	
+	boolean mouseSelect = false;
 
 	static String[] specialChars = { "&nbsp;", "&emsp;&emsp;&emsp;&emsp;", "&lt;", "&gt;", "&amp;", "<br>" };
-	static String[] specialCharsV2 = { "&nbsp;", "&emsp;", "&lt;", "&gt;", "&amp;" };
+	static String[] specialCharsV2 = { "&nbsp;", "&emsp;", "&lt;", "&gt;", "&amp;", "<u><font color=\"#00ffff\">" };
 	static String[] undoSpecialChars = { "&nbsp;", "&emsp;&emsp;&emsp;&emsp;", "<br>" };
 
 	// ArrayList of strings to be redone
@@ -60,7 +60,7 @@ public class frame {
 		listeners();
 
 		formatStuff(xSize, ySize);
-		
+
 		numOfLines = countNumOfLines();
 	}
 
@@ -186,7 +186,13 @@ public class frame {
 			public void mouseClicked(MouseEvent e) {
 				// TODO Auto-generated method stub
 				if (e.getButton() == MouseEvent.BUTTON1) {
-					setCursorOnClick(getLineNumber(e),getCharNumber(e));
+					if (!text.contains("<u><font color=\"#00ffff\">")) {
+						setCursorOnClick(getLineNumber(e), getCharNumber(e));
+					} else {
+						text = text.replaceAll("<u><font color=\"#00ffff\">", "");
+						text = text.replaceAll("</u></font>", "");
+						setCursorOnClick(getLineNumber(e), getCharNumber(e));
+					}
 				}
 			}
 
@@ -197,9 +203,8 @@ public class frame {
 
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				//mousePressed = false;
+				// mousePressed = false;
 			}
-			
 
 			@Override
 			public void mouseEntered(MouseEvent e) {
@@ -213,14 +218,15 @@ public class frame {
 				inFrame = false;
 			}
 		});
-		
+
 		frame.addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-            	
-                //mouseSelection(e);
-            }
-        });
+			@Override
+			public void mouseDragged(MouseEvent e) {
+
+				mouseSelect = true;
+				mouseSelection(e);
+			}
+		});
 
 	}
 
@@ -329,7 +335,7 @@ public class frame {
 		int keyCode = e.getKeyCode();
 		char keyTyped = e.getKeyChar();
 		String textToAdd = "";
-		if (text.contains("<u><font color=\"#00ffff\">")) {
+		if (text.contains("<u><font color=\"#00ffff\">") && !mouseSelect) {
 			selection = true;
 		} else {
 			selection = false;
@@ -390,8 +396,10 @@ public class frame {
 		}
 
 		else if (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) {
-			if (selection) {
+			if (selection && !mouseSelect) {
 				moveHighlight(keyCode);
+			} else if (mouseSelect) {
+				// DO NOTHING
 			} else {
 				moveCursor(keyCode);
 			}
@@ -412,8 +420,14 @@ public class frame {
 			}
 		}
 
-		add(textToAdd);
-		cursorIndex += textToAdd.length();
+		if (text.contains("<u><font color=\"#00ffff\">") && !textToAdd.equals("")) {
+			replace(textToAdd);
+			mouseSelect = false;
+		} else {
+			add(textToAdd);
+			cursorIndex += textToAdd.length();
+		}
+
 
 		if (selection) {
 			if (!text.contains("</font></u>")) {
@@ -430,6 +444,14 @@ public class frame {
 
 	void add(String s) {
 		text = text.substring(0, cursorIndex) + s + text.substring(cursorIndex);
+	}
+
+	void replace(String s) {
+		String toReplace = text.substring(text.indexOf("<u><font color=\"#00ffff\">") + 25,text.indexOf("</font></u>"));
+		text = text.replace(toReplace, s);
+		text = text.replace("<u><font color=\"#00ffff\">", "");
+		cursorIndex = text.indexOf("</font></u>");
+		text = text.replace("</font></u>", "");
 	}
 
 	// Save To File Function
@@ -706,7 +728,7 @@ public class frame {
 		return num;
 
 	}
-	
+
 	private int nextCharLen() {
 		int num = 1;
 		if (cursorIndex == text.length()) {
@@ -750,15 +772,16 @@ public class frame {
 
 	private void copy() {
 		if (text.contains("<u><font color=\"#00ffff\">")) {
-			String copied = text.substring(text.indexOf("<u><font color=\"#00ffff\">") + 25, text.indexOf("</font></u>"));
+			String copied = text.substring(text.indexOf("<u><font color=\"#00ffff\">") + 25,
+					text.indexOf("</font></u>"));
 			StringSelection stringSelection = new StringSelection(toPlainText(copied));
 			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 			clipboard.setContents(stringSelection, null);
 		}
 	}
 
-	private void paste(){
-		Clipboard c=Toolkit.getDefaultToolkit().getSystemClipboard();
+	private void paste() {
+		Clipboard c = Toolkit.getDefaultToolkit().getSystemClipboard();
 		String copied = "";
 		try {
 			copied = (String) c.getData(DataFlavor.stringFlavor);
@@ -769,13 +792,15 @@ public class frame {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		copied = toHtml(copied);
 		text = text.substring(0, cursorIndex) + copied + text.substring(cursorIndex, text.length());
 		cursorIndex += copied.length();
 	}
 
 	private void cut() {
 		if (text.contains("<u><font color=\"#00ffff\">")) {
-			String copied = text.substring(text.indexOf("<u><font color=\"#00ffff\">") + 25, text.indexOf("</font></u>"));
+			String copied = text.substring(text.indexOf("<u><font color=\"#00ffff\">") + 25,
+					text.indexOf("</font></u>"));
 			StringSelection stringSelection = new StringSelection(toPlainText(copied));
 			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 			clipboard.setContents(stringSelection, null);
@@ -808,86 +833,64 @@ public class frame {
 			}
 		}
 	}
-	
-	private int getLineNumber( MouseEvent e)
-	{
-		if( inFrame )
-		{
+
+	private int getLineNumber(MouseEvent e) {
+		if (inFrame) {
 			int y = e.getY();
 			int mousLinePos = y - 78;
 			int line;
-			if( mousLinePos > 0 )
-			{
+			if (mousLinePos > 0) {
 				line = 1;
-			}
-			else
-			{
+			} else {
 				return -1;
 			}
-			while( mousLinePos > line*15 )
-			{
+			while (mousLinePos > line * 15) {
 				line++;
 			}
-			return line-1;
+			return line - 1;
 		}
 		return -1;
 	}
-	
-	private int getCharNumber( MouseEvent e)
-	{
-		if( inFrame )
-		{
+
+	private int getCharNumber(MouseEvent e) {
+		if (inFrame) {
 			int x = e.getX();
 			int mousLinePos = x - 50;
 			int charNum;
-			if( mousLinePos > 0 )
-			{
+			if (mousLinePos > 0) {
 				charNum = 1;
-			}
-			else
-			{
+			} else {
 				return -1;
 			}
-			while( mousLinePos > charNum*7 )
-			{
+			while (mousLinePos > charNum * 8) {
 				charNum++;
 			}
 			return charNum;
 		}
 		return -1;
 	}
-	
-	private void setCursorOnClick(int line, int charNum)
-	{
-		cursorIndex = getLocation(line,charNum);
+
+	private void setCursorOnClick(int line, int charNum) {
+		cursorIndex = getLocation(line, charNum);
 		update();
 	}
-	
-	private int getLocation(int line, int charNum)
-	{
+
+	private int getLocation(int line, int charNum) {
 		int previousCursorPos = cursorIndex;
 		int num = 0;
-		if( line >= 0)
-		{
-			if( line < numOfLines )
-			{
+		if (line >= 0) {
+			if (line < numOfLines) {
 				String lineText = getLine(line);
-				if(charNum <= lineText.length()+1 && charNum>0)
-				{
+				if (charNum <= lineText.length() + 1 && charNum > 0) {
 					cursorIndex = getLengthTo(line);
-					for(int i = 0; i < charNum-1; i++)
-					{
+					for (int i = 0; i < charNum - 1; i++) {
 						cursorIndex += nextCharLen();
 					}
 					num = cursorIndex;
 					cursorIndex = previousCursorPos;
-				}
-				else if(charNum == -1)
-				{
+				} else if (charNum == -1) {
 					num = getLengthTo(line);
-				}
-				else
-				{
+				} else {
 					num = getLengthTo(line);
 					num += lineText.length();
 				}
@@ -895,58 +898,52 @@ public class frame {
 		}
 		return num;
 	}
-	
-	private void mouseSelection(MouseEvent e)
-	{
-		int location = getLocation(getLineNumber(e),getCharNumber(e));
-		if(location >= cursorIndex && text.contains("<u><font color=\"#00ffff\">"))
-		{
-			setCursorOnClick(getLineNumber(e),getCharNumber(e));
-		}
-		else if(!text.contains("<u><font color=\"#00ffff\">"))
-		{
-			setCursorOnClick(getLineNumber(e),getCharNumber(e));
-			text = text.substring(0,cursorIndex) + "<u><font color=\"#00ffff\">" + text.substring(cursorIndex,text.length());
+
+	private void mouseSelection(MouseEvent e) {
+		int location = getLocation(getLineNumber(e), getCharNumber(e));
+		if (!text.contains("<u><font color=\"#00ffff\">")) {
+			setCursorOnClick(getLineNumber(e), getCharNumber(e));
+			text = text.substring(0, cursorIndex) + "<u><font color=\"#00ffff\">"
+					+ text.substring(cursorIndex, text.length());
+			cursorIndex += 25;
+			text = text.substring(0, cursorIndex) + "</font></u>" + text.substring(cursorIndex, text.length());
+		} else if (text.contains("<u><font color=\"#00ffff\">") && location > cursorIndex) {
+			text = text.replace("</font></u>", "");
+			setCursorOnClick(getLineNumber(e), getCharNumber(e));
+			text = text.substring(0, cursorIndex) + "</font></u>" + text.substring(cursorIndex, text.length());
 		}
 		update();
 	}
-	
-	private int countNumOfLines()  
-	{ 
+
+	private int countNumOfLines() {
 		String toDestroy = text;
 		int count = 0;
-		while(toDestroy.contains("<br>"))
-		{
-			toDestroy = toDestroy.substring(toDestroy.indexOf("<br>")+4,toDestroy.length());
-			count ++;
+		while (toDestroy.contains("<br>")) {
+			toDestroy = toDestroy.substring(toDestroy.indexOf("<br>") + 4, toDestroy.length());
+			count++;
 		}
-	  
-	    return count; 
-	} 
-	
-	private String getLine(int num)
-	{
+
+		return count;
+	}
+
+	private String getLine(int num) {
 		String line = text;
-		while(num > 0)
-		{
-			line = line.substring(line.indexOf("<br>")+4,line.length());
+		while (num > 0) {
+			line = line.substring(line.indexOf("<br>") + 4, line.length());
 			num--;
 		}
-		if(line.contains("<br>"))
-		{
-			line = line.substring(0,line.indexOf("<br>"));
+		if (line.contains("<br>")) {
+			line = line.substring(0, line.indexOf("<br>"));
 		}
 		return line;
 	}
-	
-	private int getLengthTo(int num)
-	{
+
+	private int getLengthTo(int num) {
 		int length = 0;
 		String toDestroy = text;
-		for( int i = 0; i < num; i++)
-		{
-			length += toDestroy.substring(0,toDestroy.indexOf("<br>")+4).length();
-			toDestroy = toDestroy.substring(toDestroy.indexOf("<br>")+4,toDestroy.length());
+		for (int i = 0; i < num; i++) {
+			length += toDestroy.substring(0, toDestroy.indexOf("<br>") + 4).length();
+			toDestroy = toDestroy.substring(toDestroy.indexOf("<br>") + 4, toDestroy.length());
 		}
 		return length;
 	}
